@@ -3,8 +3,8 @@
   "WorkspaceRootPath": "C:\\Workspace\\VR-MountainClimbingScenario\\VR-MountainClimbingScenario\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{FF130B58-0137-80B5-E53F-8D28834262CC}|Assembly-CSharp.csproj|c:\\workspace\\vr-mountainclimbingscenario\\vr-mountainclimbingscenario\\assets\\rpc\\uerp.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{FF130B58-0137-80B5-E53F-8D28834262CC}|Assembly-CSharp.csproj|solutionrelative:assets\\rpc\\uerp.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{FF130B58-0137-80B5-E53F-8D28834262CC}|Assembly-CSharp.csproj|c:\\workspace\\vr-mountainclimbingscenario\\vr-mountainclimbingscenario\\assets\\gameassets\\scripting\\player\\controllers\\animatehandoninput.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FF130B58-0137-80B5-E53F-8D28834262CC}|Assembly-CSharp.csproj|solutionrelative:assets\\gameassets\\scripting\\player\\controllers\\animatehandoninput.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -19,14 +19,14 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "UERP.cs",
-              "DocumentMoniker": "C:\\Workspace\\VR-MountainClimbingScenario\\VR-MountainClimbingScenario\\Assets\\RPC\\UERP.cs",
-              "RelativeDocumentMoniker": "Assets\\RPC\\UERP.cs",
-              "ToolTip": "C:\\Workspace\\VR-MountainClimbingScenario\\VR-MountainClimbingScenario\\Assets\\RPC\\UERP.cs",
-              "RelativeToolTip": "Assets\\RPC\\UERP.cs",
-              "ViewState": "AgIAADkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Title": "AnimateHandOnInput.cs",
+              "DocumentMoniker": "C:\\Workspace\\VR-MountainClimbingScenario\\VR-MountainClimbingScenario\\Assets\\GameAssets\\Scripting\\Player\\Controllers\\AnimateHandOnInput.cs",
+              "RelativeDocumentMoniker": "Assets\\GameAssets\\Scripting\\Player\\Controllers\\AnimateHandOnInput.cs",
+              "ToolTip": "C:\\Workspace\\VR-MountainClimbingScenario\\VR-MountainClimbingScenario\\Assets\\GameAssets\\Scripting\\Player\\Controllers\\AnimateHandOnInput.cs",
+              "RelativeToolTip": "Assets\\GameAssets\\Scripting\\Player\\Controllers\\AnimateHandOnInput.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAsAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-16T20:48:24.369Z",
+              "WhenOpened": "2025-11-17T19:41:17.859Z",
               "EditorCaption": ""
             }
           ]
