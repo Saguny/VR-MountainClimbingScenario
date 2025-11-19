@@ -2345,7 +2345,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.XR.Interaction.Toolkit::UnityEngine.XR.Interaction.Toolkit.Locomotion.Climbing.ClimbInteractable
   m_InteractionManager: {fileID: 0}
-  m_Colliders: []
+  m_Colliders:
+  - {fileID: 2012450690}
+  - {fileID: 2082094276}
+  - {fileID: 366649960}
+  - {fileID: 1393695056}
+  - {fileID: 517125649}
+  - {fileID: 1308943788}
+  - {fileID: 1781897079}
+  - {fileID: 1241575868}
+  - {fileID: 1747387435}
+  - {fileID: 922903269}
+  - {fileID: 302404215}
+  - {fileID: 2003484156}
+  - {fileID: 657398450}
+  - {fileID: 2096835415}
+  - {fileID: 206383260}
+  - {fileID: 2137386507}
   m_InteractionLayers:
     m_Bits: 2
   m_DistanceCalculationMode: 1
