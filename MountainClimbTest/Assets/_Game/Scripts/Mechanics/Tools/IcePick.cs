@@ -1,14 +1,17 @@
-using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
+using UnityEngine.XR.Interaction.Toolkit.Locomotion;
+using UnityEngine.XR.Interaction.Toolkit.Inputs;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
+using UnityEngine.XR.Interaction.Toolkit.Transformers; // NEW: Required for XRBodyTransformer
+using Unity.XR.CoreUtils;
 
 [RequireComponent(typeof(XRGrabInteractable))]
 [RequireComponent(typeof(Rigidbody))]
-public class IcePick : MonoBehaviour
+public class IcePick : LocomotionProvider
 {
     [Header("Interaction Settings")]
     public InputActionProperty detachInput;
@@ -17,19 +20,19 @@ public class IcePick : MonoBehaviour
     [Tooltip("Lower value = Easier to stick.")]
     public float hitVelocityThreshold = 0.8f;
     public float penetrationDepth = 0.05f;
-    public float detachCooldown = 1.0f;
+    public float detachCooldown = 0.2f;
 
     [Header("Yank Settings")]
-    [Tooltip("Set to TRUE if you want to pull it out by force. Leave FALSE for button-only (safer).")]
-    public bool useYankToDetach = false;
+    public bool useYankToDetach = true;
     public float pullOutThreshold = 2.0f;
 
     [Header("Colliders")]
     public Collider tipCollider;
 
     [Header("System References")]
-    public DynamicMoveProvider moveProvider;
     public CharacterController characterController;
+    public XRBodyTransformer bodyTransformer; // NEW: Replaces CharacterControllerDriver
+    public DynamicMoveProvider moveProvider;
 
     private XRGrabInteractable interactable;
     private Rigidbody rb;
@@ -40,17 +43,22 @@ public class IcePick : MonoBehaviour
     private float nextStickTime = 0f;
     private float defaultStepOffset;
 
-    void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         interactable = GetComponent<XRGrabInteractable>();
         rb = GetComponent<Rigidbody>();
         xrOrigin = FindFirstObjectByType<XROrigin>();
 
-        if (moveProvider == null)
-            moveProvider = FindFirstObjectByType<DynamicMoveProvider>();
-
         if (characterController == null)
             characterController = FindFirstObjectByType<CharacterController>();
+
+        // NEW: Find the XRBodyTransformer automatically
+        if (bodyTransformer == null)
+            bodyTransformer = FindFirstObjectByType<XRBodyTransformer>();
+
+        if (moveProvider == null)
+            moveProvider = FindFirstObjectByType<DynamicMoveProvider>();
 
         interactable.movementType = XRBaseInteractable.MovementType.VelocityTracking;
 
@@ -68,6 +76,9 @@ public class IcePick : MonoBehaviour
             interactable.selectEntered.RemoveListener(OnGrab);
             interactable.selectExited.RemoveListener(OnRelease);
         }
+
+        // SAFETY: Restore control if object is destroyed
+        if (bodyTransformer != null) bodyTransformer.enabled = true;
         if (moveProvider != null) moveProvider.enabled = true;
     }
 
@@ -90,16 +101,14 @@ public class IcePick : MonoBehaviour
 
         if (collision.gameObject.CompareTag(iceTag))
         {
-            // --- FIX: Check ALL contacts, not just the first one ---
             foreach (ContactPoint contact in collision.contacts)
             {
                 if (contact.thisCollider == tipCollider)
                 {
-                    // Found the tip! Check speed.
                     if (collision.relativeVelocity.magnitude > hitVelocityThreshold)
                     {
                         StickToWall();
-                        return; // Stop checking contacts
+                        return;
                     }
                 }
             }
@@ -108,24 +117,31 @@ public class IcePick : MonoBehaviour
 
     private void StickToWall()
     {
-        isStuck = true;
-        rb.isKinematic = true;
-        transform.position += transform.forward * penetrationDepth;
-
-        // Disable movement systems
-        if (moveProvider != null) moveProvider.enabled = false;
-
-        if (characterController != null)
+        if (TryStartLocomotionImmediately())
         {
-            defaultStepOffset = characterController.stepOffset;
-            characterController.stepOffset = 0;
-        }
+            isStuck = true;
+            rb.isKinematic = true;
+            transform.position += transform.forward * penetrationDepth;
 
-        if (currentInteractor != null)
-        {
-            previousInteractorPosition = currentInteractor.transform.position;
-            if (currentInteractor is XRBaseInputInteractor inputInteractor)
-                inputInteractor.SendHapticImpulse(0.7f, 0.15f); // Stronger haptic for satisfaction
+            // --- THE FIX ---
+            // 1. Disable Joystick (Stop walking)
+            if (moveProvider != null) moveProvider.enabled = false;
+
+            // 2. Disable Body Transformer (Stop Gravity & Auto-Body-Movement)
+            if (bodyTransformer != null) bodyTransformer.enabled = false;
+
+            if (characterController != null)
+            {
+                defaultStepOffset = characterController.stepOffset;
+                characterController.stepOffset = 0;
+            }
+
+            if (currentInteractor != null)
+            {
+                previousInteractorPosition = currentInteractor.transform.position;
+                if (currentInteractor is XRBaseInputInteractor inputInteractor)
+                    inputInteractor.SendHapticImpulse(0.7f, 0.15f);
+            }
         }
     }
 
@@ -133,12 +149,15 @@ public class IcePick : MonoBehaviour
     {
         if (!isStuck) return;
 
+        TryEndLocomotion();
+
         isStuck = false;
         rb.isKinematic = false;
         nextStickTime = Time.time + detachCooldown;
 
-        // Restore movement systems
+        // --- RESTORE ---
         if (moveProvider != null) moveProvider.enabled = true;
+        if (bodyTransformer != null) bodyTransformer.enabled = true;
 
         if (characterController != null)
         {
@@ -148,7 +167,13 @@ public class IcePick : MonoBehaviour
 
     void Update()
     {
-        // 1. Manual Detach (Left Trigger) - Always works
+        // SAFETY LOOP: Ensure enemies stay disabled while stuck
+        if (isStuck)
+        {
+            if (bodyTransformer != null && bodyTransformer.enabled) bodyTransformer.enabled = false;
+            if (moveProvider != null && moveProvider.enabled) moveProvider.enabled = false;
+        }
+
         if (isStuck && detachInput.action.WasPressedThisFrame())
         {
             Unstick();
@@ -157,22 +182,25 @@ public class IcePick : MonoBehaviour
 
         if (isStuck && currentInteractor != null && xrOrigin != null)
         {
-            Vector3 currentPos = currentInteractor.transform.position;
+            if (locomotionState != LocomotionState.Moving)
+            {
+                Unstick();
+                return;
+            }
 
-            // 2. Yank Logic (Optional)
+            Vector3 currentPos = currentInteractor.transform.position;
+            Vector3 velocity = (currentPos - previousInteractorPosition) / Time.deltaTime;
+
             if (useYankToDetach)
             {
-                Vector3 velocity = (currentPos - previousInteractorPosition) / Time.deltaTime;
-                float pullBackStrength = Vector3.Dot(velocity, -transform.forward);
-
-                if (pullBackStrength > pullOutThreshold)
+                float pullDirMatch = Vector3.Dot(velocity.normalized, -transform.forward);
+                if (pullDirMatch > 0.5f && velocity.magnitude > pullOutThreshold)
                 {
                     Unstick();
                     return;
                 }
             }
 
-            // 3. Movement Logic
             Vector3 handMovement = currentPos - previousInteractorPosition;
             Vector3 climbMove = -handMovement;
 

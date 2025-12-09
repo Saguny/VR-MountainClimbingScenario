@@ -5,14 +5,15 @@ TagManager:
   serializedVersion: 3
   tags:
   - Ice
+  - climbableObjects
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Player
   - Water
   - UI
-  - 
+  - climbableObjects
   - 
   - 
   - 
