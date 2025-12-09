@@ -48,7 +48,7 @@ public class SimpleTurn : MonoBehaviour
             if (moveValue != Vector2.zero && moveInput.action.activeControl != null)
             {
                 
-                Debug.Log($"Moving via: {moveInput.action.activeControl.device.name}");
+                // Debug.Log($"Moving via: {moveInput.action.activeControl.device.name}");
             }
         }
     }

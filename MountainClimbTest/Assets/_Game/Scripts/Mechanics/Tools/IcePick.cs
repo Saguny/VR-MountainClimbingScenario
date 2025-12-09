@@ -4,20 +4,27 @@ using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.Interaction.Toolkit.Locomotion;
-using UnityEngine.XR.Interaction.Toolkit.Inputs;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
-using UnityEngine.XR.Interaction.Toolkit.Transformers; // NEW: Required for XRBodyTransformer
+using UnityEngine.XR.Interaction.Toolkit.Transformers;
 using Unity.XR.CoreUtils;
 
 [RequireComponent(typeof(XRGrabInteractable))]
 [RequireComponent(typeof(Rigidbody))]
 public class IcePick : LocomotionProvider
 {
+    // --- GLOBAL STATE ---
+    private static int activePicks = 0;
+
+    // BUG FIX: Resets counter when you press Play in the Editor
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStaticCounter()
+    {
+        activePicks = 0;
+    }
+
     [Header("Interaction Settings")]
     public InputActionProperty detachInput;
     public string iceTag = "Ice";
-
-    [Tooltip("Lower value = Easier to stick.")]
     public float hitVelocityThreshold = 0.8f;
     public float penetrationDepth = 0.05f;
     public float detachCooldown = 0.2f;
@@ -31,7 +38,7 @@ public class IcePick : LocomotionProvider
 
     [Header("System References")]
     public CharacterController characterController;
-    public XRBodyTransformer bodyTransformer; // NEW: Replaces CharacterControllerDriver
+    public XRBodyTransformer bodyTransformer;
     public DynamicMoveProvider moveProvider;
 
     private XRGrabInteractable interactable;
@@ -50,18 +57,11 @@ public class IcePick : LocomotionProvider
         rb = GetComponent<Rigidbody>();
         xrOrigin = FindFirstObjectByType<XROrigin>();
 
-        if (characterController == null)
-            characterController = FindFirstObjectByType<CharacterController>();
-
-        // NEW: Find the XRBodyTransformer automatically
-        if (bodyTransformer == null)
-            bodyTransformer = FindFirstObjectByType<XRBodyTransformer>();
-
-        if (moveProvider == null)
-            moveProvider = FindFirstObjectByType<DynamicMoveProvider>();
+        if (characterController == null) characterController = FindFirstObjectByType<CharacterController>();
+        if (bodyTransformer == null) bodyTransformer = FindFirstObjectByType<XRBodyTransformer>();
+        if (moveProvider == null) moveProvider = FindFirstObjectByType<DynamicMoveProvider>();
 
         interactable.movementType = XRBaseInteractable.MovementType.VelocityTracking;
-
         interactable.selectEntered.AddListener(OnGrab);
         interactable.selectExited.AddListener(OnRelease);
     }
@@ -76,40 +76,28 @@ public class IcePick : LocomotionProvider
             interactable.selectEntered.RemoveListener(OnGrab);
             interactable.selectExited.RemoveListener(OnRelease);
         }
-
-        // SAFETY: Restore control if object is destroyed
-        if (bodyTransformer != null) bodyTransformer.enabled = true;
-        if (moveProvider != null) moveProvider.enabled = true;
+        if (isStuck)
+        {
+            activePicks--;
+            UpdatePlayerSystems();
+        }
     }
 
-    private void OnGrab(SelectEnterEventArgs args)
-    {
-        currentInteractor = args.interactorObject;
-        Unstick();
-    }
-
-    private void OnRelease(SelectExitEventArgs args)
-    {
-        currentInteractor = null;
-        Unstick();
-    }
+    private void OnGrab(SelectEnterEventArgs args) { currentInteractor = args.interactorObject; Unstick(); }
+    private void OnRelease(SelectExitEventArgs args) { currentInteractor = null; Unstick(); }
 
     void OnCollisionEnter(Collision collision)
     {
-        if (isStuck || currentInteractor == null) return;
-        if (Time.time < nextStickTime) return;
+        if (isStuck || currentInteractor == null || Time.time < nextStickTime) return;
 
         if (collision.gameObject.CompareTag(iceTag))
         {
             foreach (ContactPoint contact in collision.contacts)
             {
-                if (contact.thisCollider == tipCollider)
+                if (contact.thisCollider == tipCollider && collision.relativeVelocity.magnitude > hitVelocityThreshold)
                 {
-                    if (collision.relativeVelocity.magnitude > hitVelocityThreshold)
-                    {
-                        StickToWall();
-                        return;
-                    }
+                    StickToWall();
+                    return;
                 }
             }
         }
@@ -120,28 +108,30 @@ public class IcePick : LocomotionProvider
         if (TryStartLocomotionImmediately())
         {
             isStuck = true;
+            activePicks++;
+
             rb.isKinematic = true;
+            interactable.movementType = XRBaseInteractable.MovementType.Kinematic;
+            interactable.trackPosition = false;
+            interactable.trackRotation = false;
+
             transform.position += transform.forward * penetrationDepth;
 
-            // --- THE FIX ---
-            // 1. Disable Joystick (Stop walking)
-            if (moveProvider != null) moveProvider.enabled = false;
-
-            // 2. Disable Body Transformer (Stop Gravity & Auto-Body-Movement)
-            if (bodyTransformer != null) bodyTransformer.enabled = false;
-
-            if (characterController != null)
-            {
-                defaultStepOffset = characterController.stepOffset;
-                characterController.stepOffset = 0;
-            }
-
+            // Haptics
             if (currentInteractor != null)
             {
                 previousInteractorPosition = currentInteractor.transform.position;
                 if (currentInteractor is XRBaseInputInteractor inputInteractor)
                     inputInteractor.SendHapticImpulse(0.7f, 0.15f);
             }
+
+            // Save step offset to prevent popping up
+            if (characterController != null && activePicks == 1)
+                defaultStepOffset = characterController.stepOffset;
+
+            if (characterController != null) characterController.stepOffset = 0;
+
+            UpdatePlayerSystems();
         }
     }
 
@@ -152,23 +142,51 @@ public class IcePick : LocomotionProvider
         TryEndLocomotion();
 
         isStuck = false;
+        activePicks--;
+        // Safety clamp
+        if (activePicks < 0) activePicks = 0;
+
         rb.isKinematic = false;
+        interactable.trackPosition = true;
+        interactable.trackRotation = true;
+        interactable.movementType = XRBaseInteractable.MovementType.VelocityTracking;
+
         nextStickTime = Time.time + detachCooldown;
 
-        // --- RESTORE ---
-        if (moveProvider != null) moveProvider.enabled = true;
-        if (bodyTransformer != null) bodyTransformer.enabled = true;
-
+        // Restore step offset immediately so we can walk over bumps
         if (characterController != null)
         {
             characterController.stepOffset = defaultStepOffset;
+        }
+
+        UpdatePlayerSystems();
+    }
+
+    private void UpdatePlayerSystems()
+    {
+        // LOGIC FIX:
+        // Only disable movement if picks are actively stuck.
+        // If picks are 0, we FORCE enable everything. 
+        // We let standard XRI handle the "Hand vs Walk" conflict to avoid getting locked out.
+
+        bool anyPickStuck = activePicks > 0;
+
+        if (anyPickStuck)
+        {
+            if (moveProvider != null) moveProvider.enabled = false;
+            if (bodyTransformer != null) bodyTransformer.enabled = false;
+        }
+        else
+        {
+            if (moveProvider != null) moveProvider.enabled = true;
+            if (bodyTransformer != null) bodyTransformer.enabled = true;
         }
     }
 
     void Update()
     {
-        // SAFETY LOOP: Ensure enemies stay disabled while stuck
-        if (isStuck)
+        // Failsafe: Ensure systems stay off if we are supposed to be climbing
+        if (activePicks > 0)
         {
             if (bodyTransformer != null && bodyTransformer.enabled) bodyTransformer.enabled = false;
             if (moveProvider != null && moveProvider.enabled) moveProvider.enabled = false;
@@ -182,12 +200,6 @@ public class IcePick : LocomotionProvider
 
         if (isStuck && currentInteractor != null && xrOrigin != null)
         {
-            if (locomotionState != LocomotionState.Moving)
-            {
-                Unstick();
-                return;
-            }
-
             Vector3 currentPos = currentInteractor.transform.position;
             Vector3 velocity = (currentPos - previousInteractorPosition) / Time.deltaTime;
 
