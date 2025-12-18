@@ -50,6 +50,9 @@ public class IcePick : LocomotionProvider
     private float nextStickTime = 0f;
     private float defaultStepOffset;
 
+    public static bool IsAnyPickStuck => activePicks > 0;
+
+
     protected override void Awake()
     {
         base.Awake();
