@@ -1,99 +1,78 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
-using UnityEngine.XR.Interaction.Toolkit.Locomotion;
-using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 [RequireComponent(typeof(XRGrabInteractable))]
 [RequireComponent(typeof(Rigidbody))]
-public class AnchorHook : LocomotionProvider
+public class AnchorHook : MonoBehaviour
 {
     [Header("Interaction")]
     public InputActionProperty detachInput;
-    public string anchorTag = "AnchorSurface";
+    public string anchorSurfaceTag = "AnchorSurface";
     public float hitVelocityThreshold = 0.6f;
     public float penetrationDepth = 0.03f;
     public float detachCooldown = 0.25f;
 
-    [Header("Soft Rope")]
-    public float ropeSlack = 0.1f;
-    public float ropeCorrectionSpeed = 10f;
-    public float fallActivationVelocity = -0.5f;
-
-    [Header("Yank Detach")]
-    public bool useYankToDetach = true;
-    public float pullOutThreshold = 2.0f;
+    [Header("Safety")]
+    public float maxFallDistance = 3.0f;       // maximale Sicherung
+    public float constraintZoneHeight = 1.0f;  // unterster Meter horizontal
+    public float wallRadius = 0.6f;
 
     [Header("Colliders")]
     public Collider tipCollider;
 
     [Header("Player")]
     public CharacterController characterController;
-    public DynamicMoveProvider moveProvider;
 
-    // ---------- INTERNAL ----------
     private XRGrabInteractable interactable;
     private Rigidbody rb;
 
     private bool isStuck = false;
-    private bool ropeActive = false;
-    private float ropeLength;
-    private float nextStickTime;
+    private float nextStickTime = 0f;
 
     private IXRSelectInteractor currentInteractor;
-    private Vector3 previousInteractorPosition;
-    private Vector3 previousPlayerPosition;
+    private Vector3 previousInteractorPos;
+    private Vector3 previousPlayerPos;
 
-    protected override void Awake()
+    void Awake()
     {
-        base.Awake();
-
         interactable = GetComponent<XRGrabInteractable>();
         rb = GetComponent<Rigidbody>();
 
         if (!characterController)
             characterController = FindFirstObjectByType<CharacterController>();
 
-        if (!moveProvider)
-            moveProvider = FindFirstObjectByType<DynamicMoveProvider>();
-
-        // XR Socket kompatibel
         interactable.throwOnDetach = false;
         interactable.movementType = XRBaseInteractable.MovementType.VelocityTracking;
 
         interactable.selectEntered.AddListener(OnGrab);
         interactable.selectExited.AddListener(OnRelease);
+
+        previousPlayerPos = characterController.transform.position;
     }
 
     void OnEnable() => detachInput.action.Enable();
     void OnDisable() => detachInput.action.Disable();
 
-    // ---------- INTERACTION ----------
     void OnGrab(SelectEnterEventArgs args)
     {
         currentInteractor = args.interactorObject;
-
-        // Wenn aus Wand gezogen ? l�sen
         Unstick();
-
-        rb.isKinematic = false;
     }
 
     void OnRelease(SelectExitEventArgs args)
     {
         currentInteractor = null;
-        // NICHTS tun ? Socket entscheidet, ob er snappt
     }
 
-    // ---------- COLLISION ----------
     void OnCollisionEnter(Collision collision)
     {
         if (isStuck || currentInteractor == null || Time.time < nextStickTime)
             return;
 
-        if (!collision.gameObject.CompareTag(anchorTag))
+        if (!collision.gameObject.CompareTag(anchorSurfaceTag))
             return;
 
         foreach (var contact in collision.contacts)
@@ -107,91 +86,96 @@ public class AnchorHook : LocomotionProvider
         }
     }
 
-    // ---------- STICK ----------
     void Stick(Vector3 hitPoint)
     {
-        if (!TryStartLocomotionImmediately())
-            return;
-
         isStuck = true;
-        ropeActive = true;
-
-        // XR KOMPLETT RAUS
-        interactable.enabled = false;
-
-        rb.isKinematic = true;
-        rb.linearVelocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
-
         transform.position = hitPoint + transform.forward * penetrationDepth;
 
-        ropeLength = Vector3.Distance(
-            characterController.transform.position,
-            transform.position
-        );
-
-        previousPlayerPosition = characterController.transform.position;
-
         if (currentInteractor != null)
-            previousInteractorPosition = currentInteractor.transform.position;
+            previousInteractorPos = currentInteractor.transform.position;
+
+        previousPlayerPos = characterController.transform.position;
     }
 
-    // ---------- UNSTICK ----------
     void Unstick()
     {
         if (!isStuck) return;
 
-        TryEndLocomotion();
-
         isStuck = false;
-        ropeActive = false;
         nextStickTime = Time.time + detachCooldown;
-
-        rb.isKinematic = false;
-
-        // XR wieder erlauben ? Socket kann snappen
-        interactable.enabled = true;
     }
 
-    // ---------- SOFT ROPE ----------
+    // ------------------- CLIMB CHECK -------------------
+    private bool IsClimbing()
+    {
+        var hands = FindObjectsOfType<XRDirectInteractor>();
+        foreach (var hand in hands)
+        {
+            if (hand.hasSelection &&
+                hand.firstInteractableSelected is XRGrabInteractable grab &&
+                grab.CompareTag("Climbable"))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     void LateUpdate()
     {
-        if (!ropeActive || !characterController) return;
+        if (!isStuck || !characterController)
+            return;
 
         Vector3 playerPos = characterController.transform.position;
         Vector3 anchorPos = transform.position;
 
-        Vector3 toPlayer = playerPos - anchorPos;
-        float dist = toPlayer.magnitude;
+        // Berechne Y-Velocity des Spielers
+        Vector3 playerVelocity = (playerPos - previousPlayerPos) / Time.deltaTime;
 
-        float verticalVelocity =
-            (playerPos.y - previousPlayerPosition.y) / Time.deltaTime;
-
-        previousPlayerPosition = playerPos;
-
-        if (verticalVelocity < fallActivationVelocity &&
-            dist > ropeLength + ropeSlack)
+        // --- 1) Constraint nur anwenden, wenn Spieler nicht klettert und fällt ---
+        if (!IsClimbing() && playerVelocity.y <= 0f)
         {
-            float excess = dist - ropeLength;
-            Vector3 correction =
-                toPlayer.normalized * excess * ropeCorrectionSpeed * Time.deltaTime;
+            float bottomLimit = anchorPos.y - maxFallDistance;
+            float constraintStart = bottomLimit + constraintZoneHeight;
 
-            characterController.Move(-correction);
-        }
-
-        // Yank detach
-        if (useYankToDetach && currentInteractor != null)
-        {
-            Vector3 handVel =
-                (currentInteractor.transform.position - previousInteractorPosition) / Time.deltaTime;
-
-            if (Vector3.Dot(handVel.normalized, -transform.forward) > 0.5f &&
-                handVel.magnitude > pullOutThreshold)
+            // 1a) Falllimit nach unten
+            if (playerPos.y < bottomLimit)
             {
-                Unstick();
+                float correction = bottomLimit - playerPos.y;
+                characterController.Move(Vector3.up * correction);
+                playerPos = characterController.transform.position;
             }
 
-            previousInteractorPosition = currentInteractor.transform.position;
+            // 1b) Unterster Meter: horizontale Clamp
+            if (playerPos.y <= constraintStart)
+            {
+                Vector3 flatOffset = new Vector3(
+                    playerPos.x - anchorPos.x,
+                    0f,
+                    playerPos.z - anchorPos.z
+                );
+
+                if (flatOffset.magnitude > wallRadius)
+                {
+                    Vector3 clamped = flatOffset.normalized * wallRadius;
+                    Vector3 target = new Vector3(
+                        anchorPos.x + clamped.x,
+                        playerPos.y,
+                        anchorPos.z + clamped.z
+                    );
+
+                    characterController.Move(target - playerPos);
+                }
+            }
+        }
+
+        previousPlayerPos = characterController.transform.position;
+
+        // --- 2) Yank Detach (optional) ---
+        if (currentInteractor != null && detachInput.action.WasPressedThisFrame())
+        {
+            Unstick();
+            return;
         }
     }
 }

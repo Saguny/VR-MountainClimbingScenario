@@ -5256,8 +5256,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8762b40a340837f43ae7443aa0181883, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VRClimbingHook
-  m_Mediator: {fileID: 0}
-  m_TransformationPriority: 0
   detachInput:
     m_UseReference: 0
     m_Action:
@@ -5270,19 +5268,15 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 0}
-  anchorTag: Anchor
+  anchorSurfaceTag: Anchor
   hitVelocityThreshold: 0.6
   penetrationDepth: 0.03
   detachCooldown: 0.25
-  ropeSlack: 0.1
-  ropeCorrectionSpeed: 50
-  fallActivationVelocity: -0.2
-  useYankToDetach: 1
-  pullOutThreshold: 2
+  maxFallDistance: 5
+  constraintZoneHeight: 1
+  wallRadius: 0.6
   tipCollider: {fileID: 1484439639}
   characterController: {fileID: 739727062}
-  moveProvider: {fileID: 2093322021}
-  beltSlot: {fileID: 1390162979}
 --- !u!114 &1484439637
 MonoBehaviour:
   m_ObjectHideFlags: 0
