@@ -1,181 +1,153 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
-using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
-[RequireComponent(typeof(XRGrabInteractable))]
-[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(LineRenderer))]
 public class AnchorHook : MonoBehaviour
 {
-    [Header("Interaction")]
+    [Header("Settings")]
+    public string climbableTag = "Climbable";
+    public float maxFallDistance = 3.0f;
+    public float wallRadius = 0.8f;
+    public float reachThreshold = 0.6f;
+
+    [Header("Input")]
     public InputActionProperty detachInput;
-    public string anchorSurfaceTag = "AnchorSurface";
-    public float hitVelocityThreshold = 0.6f;
-    public float penetrationDepth = 0.03f;
-    public float detachCooldown = 0.25f;
 
-    [Header("Safety")]
-    public float maxFallDistance = 3.0f;       // maximale Sicherung
-    public float constraintZoneHeight = 1.0f;  // unterster Meter horizontal
-    public float wallRadius = 0.6f;
-
-    [Header("Colliders")]
-    public Collider tipCollider;
-
-    [Header("Player")]
+    [Header("Mandatory Assignments")]
+    public Transform leftController;
+    public Transform rightController;
+    public Transform playerCamera;
     public CharacterController characterController;
+    public XRInteractionManager interactionManager;
 
+    private LineRenderer line;
     private XRGrabInteractable interactable;
-    private Rigidbody rb;
-
     private bool isStuck = false;
-    private float nextStickTime = 0f;
-
-    private IXRSelectInteractor currentInteractor;
-    private Vector3 previousInteractorPos;
-    private Vector3 previousPlayerPos;
+    private Vector3 lastValidPlayerPos;
+    private Vector3 anchorPosition;
 
     void Awake()
     {
+        line = GetComponent<LineRenderer>();
         interactable = GetComponent<XRGrabInteractable>();
-        rb = GetComponent<Rigidbody>();
+        if (!playerCamera) playerCamera = Camera.main.transform;
 
-        if (!characterController)
-            characterController = FindFirstObjectByType<CharacterController>();
-
-        interactable.throwOnDetach = false;
-        interactable.movementType = XRBaseInteractable.MovementType.VelocityTracking;
-
-        interactable.selectEntered.AddListener(OnGrab);
-        interactable.selectExited.AddListener(OnRelease);
-
-        previousPlayerPos = characterController.transform.position;
+        line.enabled = false;
+        line.positionCount = 2;
     }
 
-    void OnEnable() => detachInput.action.Enable();
-    void OnDisable() => detachInput.action.Disable();
-
-    void OnGrab(SelectEnterEventArgs args)
+    void OnCollisionEnter(Collision col)
     {
-        currentInteractor = args.interactorObject;
-        Unstick();
+        if (isStuck || !col.gameObject.CompareTag("Anchor")) return;
+        Stick(col.contacts[0].point);
     }
 
-    void OnRelease(SelectExitEventArgs args)
-    {
-        currentInteractor = null;
-    }
-
-    void OnCollisionEnter(Collision collision)
-    {
-        if (isStuck || currentInteractor == null || Time.time < nextStickTime)
-            return;
-
-        if (!collision.gameObject.CompareTag(anchorSurfaceTag))
-            return;
-
-        foreach (var contact in collision.contacts)
-        {
-            if (contact.thisCollider == tipCollider &&
-                collision.relativeVelocity.magnitude > hitVelocityThreshold)
-            {
-                Stick(contact.point);
-                return;
-            }
-        }
-    }
-
-    void Stick(Vector3 hitPoint)
+    void Stick(Vector3 point)
     {
         isStuck = true;
-        transform.position = hitPoint + transform.forward * penetrationDepth;
+        GetComponent<Rigidbody>().isKinematic = true;
+        anchorPosition = point;
+        transform.position = point;
 
-        if (currentInteractor != null)
-            previousInteractorPos = currentInteractor.transform.position;
-
-        previousPlayerPos = characterController.transform.position;
-    }
-
-    void Unstick()
-    {
-        if (!isStuck) return;
-
-        isStuck = false;
-        nextStickTime = Time.time + detachCooldown;
-    }
-
-    // ------------------- CLIMB CHECK -------------------
-    private bool IsClimbing()
-    {
-        var hands = FindObjectsOfType<XRDirectInteractor>();
-        foreach (var hand in hands)
+        if (interactable.isSelected)
         {
-            if (hand.hasSelection &&
-                hand.firstInteractableSelected is XRGrabInteractable grab &&
-                grab.CompareTag("Climbable"))
-            {
-                return true;
-            }
+            var interactors = new List<UnityEngine.XR.Interaction.Toolkit.Interactors.IXRSelectInteractor>(interactable.interactorsSelecting);
+            foreach (var i in interactors) interactionManager.SelectExit(i, interactable);
+        }
+
+        line.enabled = true;
+        lastValidPlayerPos = characterController.transform.position;
+    }
+
+    private bool IsNearClimbable()
+    {
+        return CheckHand(leftController) || CheckHand(rightController);
+    }
+
+    private bool CheckHand(Transform hand)
+    {
+        if (!hand) return false;
+        Collider[] hits = Physics.OverlapSphere(hand.position, reachThreshold);
+        foreach (var h in hits)
+        {
+            if (h.CompareTag(climbableTag)) return true;
         }
         return false;
     }
 
+    // Wir nutzen FixedUpdate für die physikalische Korrektur, 
+    // um stabilere Interaktionen während der Stick-Bewegung zu haben.
+    void FixedUpdate()
+    {
+        if (!isStuck || !characterController) return;
+
+        if (IsNearClimbable())
+        {
+            // Wenn wir klettern wollen, "speichern" wir die aktuelle Position als sicher.
+            // Das erlaubt dem Stick-Movement, sich frei zu bewegen, ohne sofort zurückgezogen zu werden.
+            lastValidPlayerPos = characterController.transform.position;
+            return;
+        }
+
+        Vector3 currentPos = characterController.transform.position;
+        Vector3 correction = Vector3.zero;
+
+        // 1. Vertikale Sicherung (Fallen)
+        float limitY = anchorPosition.y - maxFallDistance;
+        if (currentPos.y < limitY)
+        {
+            correction.y = limitY - currentPos.y;
+        }
+
+        // 2. Horizontale Sicherung (Pendel-Radius)
+        // Wir berechnen den Abstand zum Anker auf der XZ-Ebene
+        Vector3 flatPlayerPos = new Vector3(currentPos.x, 0, currentPos.z);
+        Vector3 flatAnchorPos = new Vector3(anchorPosition.x, 0, anchorPosition.z);
+        float horizontalDist = Vector3.Distance(flatPlayerPos, flatAnchorPos);
+
+        if (horizontalDist > wallRadius)
+        {
+            Vector3 dir = (flatPlayerPos - flatAnchorPos).normalized;
+            Vector3 targetPos = flatAnchorPos + dir * wallRadius;
+            correction.x = targetPos.x - currentPos.x;
+            correction.z = targetPos.z - currentPos.z;
+        }
+
+        // WICHTIG: Nur korrigieren, wenn wir außerhalb der Grenzen sind.
+        // Wir nutzen eine kleine Toleranz (0.01f), um Zittern zu vermeiden.
+        if (correction.magnitude > 0.01f)
+        {
+            characterController.Move(correction);
+        }
+    }
+
     void LateUpdate()
     {
-        if (!isStuck || !characterController)
-            return;
+        if (!isStuck) return;
 
-        Vector3 playerPos = characterController.transform.position;
-        Vector3 anchorPos = transform.position;
+        // Visualisierung (immer im LateUpdate für flüssige Optik)
+        line.SetPosition(0, anchorPosition);
+        line.SetPosition(1, playerCamera.position - Vector3.up * 0.4f);
 
-        // Berechne Y-Velocity des Spielers
-        Vector3 playerVelocity = (playerPos - previousPlayerPos) / Time.deltaTime;
-
-        // --- 1) Constraint nur anwenden, wenn Spieler nicht klettert und fällt ---
-        if (!IsClimbing() && playerVelocity.y <= 0f)
+        if (IsNearClimbable())
         {
-            float bottomLimit = anchorPos.y - maxFallDistance;
-            float constraintStart = bottomLimit + constraintZoneHeight;
-
-            // 1a) Falllimit nach unten
-            if (playerPos.y < bottomLimit)
-            {
-                float correction = bottomLimit - playerPos.y;
-                characterController.Move(Vector3.up * correction);
-                playerPos = characterController.transform.position;
-            }
-
-            // 1b) Unterster Meter: horizontale Clamp
-            if (playerPos.y <= constraintStart)
-            {
-                Vector3 flatOffset = new Vector3(
-                    playerPos.x - anchorPos.x,
-                    0f,
-                    playerPos.z - anchorPos.z
-                );
-
-                if (flatOffset.magnitude > wallRadius)
-                {
-                    Vector3 clamped = flatOffset.normalized * wallRadius;
-                    Vector3 target = new Vector3(
-                        anchorPos.x + clamped.x,
-                        playerPos.y,
-                        anchorPos.z + clamped.z
-                    );
-
-                    characterController.Move(target - playerPos);
-                }
-            }
+            line.startColor = line.endColor = Color.green;
+        }
+        else
+        {
+            line.startColor = line.endColor = Color.red;
         }
 
-        previousPlayerPos = characterController.transform.position;
+        if (detachInput.action.WasPressedThisFrame()) Unstick();
+    }
 
-        // --- 2) Yank Detach (optional) ---
-        if (currentInteractor != null && detachInput.action.WasPressedThisFrame())
-        {
-            Unstick();
-            return;
-        }
+    void Unstick()
+    {
+        isStuck = false;
+        GetComponent<Rigidbody>().isKinematic = false;
+        line.enabled = false;
     }
 }
