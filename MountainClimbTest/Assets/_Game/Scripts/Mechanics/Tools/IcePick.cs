@@ -104,7 +104,7 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
         if (isStuck || currentInteractor == null || Time.time < nextStickTime) return;
 
         // 4. Tag Check
-        if (!collision.gameObject.CompareTag(iceTag) && !collision.gameObject.CompareTag("Climbable")) return;
+        if (!collision.gameObject.CompareTag(iceTag) && !collision.gameObject.CompareTag("climbableObjects")) return;
 
         // 5. Tip Collider & Velocity Check
         foreach (ContactPoint contact in collision.contacts)
