@@ -7,7 +7,7 @@ using UnityEngine.XR.Interaction.Toolkit.Locomotion;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 using UnityEngine.XR.Interaction.Toolkit.Transformers;
 using Unity.XR.CoreUtils;
-using MountainRescue.Interfaces; // Keeps the Fall System working
+using MountainRescue.Interfaces; 
 
 [RequireComponent(typeof(XRGrabInteractable))]
 [RequireComponent(typeof(Rigidbody))]
@@ -49,13 +49,11 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
     private Vector3 previousInteractorPosition;
     private float nextStickTime = 0f;
     private float defaultStepOffset;
-
-    // --- INTERFACE IMPLEMENTATION ---
     public bool IsAnchored()
     {
         return isStuck;
     }
-    // --------------------------------
+    
 
     protected override void Awake()
     {
