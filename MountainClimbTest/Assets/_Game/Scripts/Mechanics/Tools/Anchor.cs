@@ -3,14 +3,24 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using MountainRescue.Interfaces;
 
 [RequireComponent(typeof(LineRenderer))]
-public class AnchorHook : MonoBehaviour
+[RequireComponent(typeof(XRGrabInteractable))]
+[RequireComponent(typeof(Rigidbody))]
+public class AnchorHook : MonoBehaviour, IAnchorStateProvider
 {
     [Header("Settings")]
-    public string climbableTag = "Climbable";
+    [Tooltip("Tag of the wall objects where the anchor can stick.")]
+    public string climbableTag = "Climbable"; // Can also use "Anchor" tag if you prefer
+
+    [Tooltip("Max rope length before physics pulls you back.")]
     public float maxFallDistance = 3.0f;
+
+    [Tooltip("Radius around the anchor point where the player can move freely.")]
     public float wallRadius = 0.8f;
+
+    [Tooltip("How close the hook needs to be to attach.")]
     public float reachThreshold = 0.6f;
 
     [Header("Input")]
@@ -25,102 +35,134 @@ public class AnchorHook : MonoBehaviour
 
     private LineRenderer line;
     private XRGrabInteractable interactable;
+    private Rigidbody rb;
     private bool isStuck = false;
     private Vector3 lastValidPlayerPos;
     private Vector3 anchorPosition;
+
+    // --- INTERFACE IMPLEMENTATION ---
+    public bool IsAnchored()
+    {
+        // The player is safe if the hook is physically stuck in the wall.
+        return isStuck;
+    }
+    // --------------------------------
 
     void Awake()
     {
         line = GetComponent<LineRenderer>();
         interactable = GetComponent<XRGrabInteractable>();
-        if (!playerCamera) playerCamera = Camera.main.transform;
+        rb = GetComponent<Rigidbody>();
 
+        if (!playerCamera && Camera.main != null)
+            playerCamera = Camera.main.transform;
+
+        // Initialize Line Renderer
         line.enabled = false;
         line.positionCount = 2;
+        line.startWidth = 0.02f;
+        line.endWidth = 0.02f;
+    }
+
+    void OnEnable()
+    {
+        // Optional: Subscribe to select events if needed for logic
     }
 
     void OnCollisionEnter(Collision col)
     {
-        if (isStuck || !col.gameObject.CompareTag("Anchor")) return;
-        Stick(col.contacts[0].point);
+        // Only stick if not already stuck and hitting a valid anchor surface
+        if (isStuck) return;
+
+        // Check for specific tag (e.g., "Anchor" or "Climbable")
+        if (col.gameObject.CompareTag("Anchor") || col.gameObject.CompareTag(climbableTag))
+        {
+            Stick(col.contacts[0].point);
+        }
     }
 
     void Stick(Vector3 point)
     {
         isStuck = true;
-        GetComponent<Rigidbody>().isKinematic = true;
-        anchorPosition = point;
+
+        // Physics: Lock in place
+        rb.isKinematic = true;
+        rb.useGravity = false;
+
+        // Visuals: Snap to point
         transform.position = point;
+        anchorPosition = point; // Store the exact hit point
 
-        if (interactable.isSelected)
+        // Logic: Force drop from hand so it stays on wall
+        if (interactionManager != null && interactable.isSelected)
         {
-            var interactors = new List<UnityEngine.XR.Interaction.Toolkit.Interactors.IXRSelectInteractor>(interactable.interactorsSelecting);
-            foreach (var i in interactors) interactionManager.SelectExit(i, interactable);
+            // Note: In XRI 3.x this syntax might vary slightly, but this is standard
+            interactionManager.SelectExit(interactable.interactorsSelecting[0], interactable);
         }
 
+        // Disable interaction so you can't grab it while it's holding you (optional choice)
+        interactable.enabled = false;
+
+        // Turn on the rope visual
         line.enabled = true;
-        lastValidPlayerPos = characterController.transform.position;
     }
 
-    private bool IsNearClimbable()
+    void Unstick()
     {
-        return CheckHand(leftController) || CheckHand(rightController);
+        isStuck = false;
+
+        // Physics: Release
+        rb.isKinematic = false;
+        rb.useGravity = true;
+
+        // Interaction: Re-enable
+        interactable.enabled = true;
+
+        // Visuals: Hide rope
+        line.enabled = false;
     }
 
-    private bool CheckHand(Transform hand)
+    void Update()
     {
-        if (!hand) return false;
-        Collider[] hits = Physics.OverlapSphere(hand.position, reachThreshold);
-        foreach (var h in hits)
-        {
-            if (h.CompareTag(climbableTag)) return true;
-        }
-        return false;
-    }
+        if (!isStuck) return;
 
-    // Wir nutzen FixedUpdate für die physikalische Korrektur, 
-    // um stabilere Interaktionen während der Stick-Bewegung zu haben.
-    void FixedUpdate()
-    {
-        if (!isStuck || !characterController) return;
+        // --- SAFETY ROPE LOGIC ---
+        // 1. Calculate rope length
+        float dist = Vector3.Distance(playerCamera.position, anchorPosition);
 
-        if (IsNearClimbable())
+        // 2. Physics Correction (Prevent falling too far)
+        // If player goes beyond max length, pull them back (rudimentary physics)
+        if (dist > maxFallDistance)
         {
-            // Wenn wir klettern wollen, "speichern" wir die aktuelle Position als sicher.
-            // Das erlaubt dem Stick-Movement, sich frei zu bewegen, ohne sofort zurückgezogen zu werden.
-            lastValidPlayerPos = characterController.transform.position;
-            return;
+            Vector3 direction = (playerCamera.position - anchorPosition).normalized;
+            Vector3 clampedPos = anchorPosition + direction * maxFallDistance;
+
+            // Move CC to the clamped position (ignoring Y if you want to swing, but this is a hard stop)
+            Vector3 correction = clampedPos - playerCamera.position;
+
+            // Apply immediately to stop the fall
+            characterController.Move(correction);
         }
 
-        Vector3 currentPos = characterController.transform.position;
-        Vector3 correction = Vector3.zero;
-
-        // 1. Vertikale Sicherung (Fallen)
-        float limitY = anchorPosition.y - maxFallDistance;
-        if (currentPos.y < limitY)
-        {
-            correction.y = limitY - currentPos.y;
-        }
-
-        // 2. Horizontale Sicherung (Pendel-Radius)
-        // Wir berechnen den Abstand zum Anker auf der XZ-Ebene
-        Vector3 flatPlayerPos = new Vector3(currentPos.x, 0, currentPos.z);
+        // 3. Wall Hugging Logic (Prevent swinging out too far from wall)
+        // Check distance on XZ plane only
+        Vector3 flatPlayerPos = new Vector3(playerCamera.position.x, 0, playerCamera.position.z);
         Vector3 flatAnchorPos = new Vector3(anchorPosition.x, 0, anchorPosition.z);
         float horizontalDist = Vector3.Distance(flatPlayerPos, flatAnchorPos);
+        Vector3 wallCorrection = Vector3.zero;
 
         if (horizontalDist > wallRadius)
         {
             Vector3 dir = (flatPlayerPos - flatAnchorPos).normalized;
             Vector3 targetPos = flatAnchorPos + dir * wallRadius;
-            correction.x = targetPos.x - currentPos.x;
-            correction.z = targetPos.z - currentPos.z;
+            wallCorrection.x = targetPos.x - flatPlayerPos.x;
+            wallCorrection.z = targetPos.z - flatPlayerPos.z;
         }
 
-        // WICHTIG: Nur korrigieren, wenn wir außerhalb der Grenzen sind.
-        // Wir nutzen eine kleine Toleranz (0.01f), um Zittern zu vermeiden.
-        if (correction.magnitude > 0.01f)
+        // Apply Wall Correction
+        if (wallCorrection.magnitude > 0.01f)
         {
-            characterController.Move(correction);
+            characterController.Move(wallCorrection);
         }
     }
 
@@ -128,26 +170,27 @@ public class AnchorHook : MonoBehaviour
     {
         if (!isStuck) return;
 
-        // Visualisierung (immer im LateUpdate für flüssige Optik)
+        // Visuals: Draw the rope from Hook to Player Harness (Camera - Offset)
         line.SetPosition(0, anchorPosition);
-        line.SetPosition(1, playerCamera.position - Vector3.up * 0.4f);
+        line.SetPosition(1, playerCamera.position - Vector3.up * 0.4f); // Approx chest height
 
-        if (IsNearClimbable())
+        // Color Logic: Green if safe/near, Red if stretching limit
+        float dist = Vector3.Distance(playerCamera.position, anchorPosition);
+        if (dist < maxFallDistance * 0.8f)
         {
-            line.startColor = line.endColor = Color.green;
+            line.startColor = Color.green;
+            line.endColor = Color.green;
         }
         else
         {
-            line.startColor = line.endColor = Color.red;
+            line.startColor = Color.yellow;
+            line.endColor = Color.red;
         }
 
-        if (detachInput.action.WasPressedThisFrame()) Unstick();
-    }
-
-    void Unstick()
-    {
-        isStuck = false;
-        GetComponent<Rigidbody>().isKinematic = false;
-        line.enabled = false;
+        // Input: Manual Detach
+        if (detachInput.action != null && detachInput.action.WasPressedThisFrame())
+        {
+            Unstick();
+        }
     }
 }

@@ -7,15 +7,15 @@ using UnityEngine.XR.Interaction.Toolkit.Locomotion;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 using UnityEngine.XR.Interaction.Toolkit.Transformers;
 using Unity.XR.CoreUtils;
+using MountainRescue.Interfaces; // Keeps the Fall System working
 
 [RequireComponent(typeof(XRGrabInteractable))]
 [RequireComponent(typeof(Rigidbody))]
-public class IcePick : LocomotionProvider
+public class IcePick : LocomotionProvider, IAnchorStateProvider
 {
     // --- GLOBAL STATE ---
     private static int activePicks = 0;
 
-    // BUG FIX: Resets counter when you press Play in the Editor
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetStaticCounter()
     {
@@ -50,12 +50,17 @@ public class IcePick : LocomotionProvider
     private float nextStickTime = 0f;
     private float defaultStepOffset;
 
-    public static bool IsAnyPickStuck => activePicks > 0;
-
+    // --- INTERFACE IMPLEMENTATION ---
+    public bool IsAnchored()
+    {
+        return isStuck;
+    }
+    // --------------------------------
 
     protected override void Awake()
     {
-        base.Awake();
+        base.Awake(); // Initialize LocomotionProvider
+
         interactable = GetComponent<XRGrabInteractable>();
         rb = GetComponent<Rigidbody>();
         xrOrigin = FindFirstObjectByType<XROrigin>();
@@ -64,91 +69,103 @@ public class IcePick : LocomotionProvider
         if (bodyTransformer == null) bodyTransformer = FindFirstObjectByType<XRBodyTransformer>();
         if (moveProvider == null) moveProvider = FindFirstObjectByType<DynamicMoveProvider>();
 
+        // We use VelocityTracking so it feels heavy/real until it sticks
         interactable.movementType = XRBaseInteractable.MovementType.VelocityTracking;
+
         interactable.selectEntered.AddListener(OnGrab);
         interactable.selectExited.AddListener(OnRelease);
     }
 
-    void OnEnable() => detachInput.action.Enable();
-    void OnDisable() => detachInput.action.Disable();
-
-    void OnDestroy()
+    void OnEnable()
     {
-        if (interactable != null)
-        {
-            interactable.selectEntered.RemoveListener(OnGrab);
-            interactable.selectExited.RemoveListener(OnRelease);
-        }
-        if (isStuck)
-        {
-            activePicks--;
-            UpdatePlayerSystems();
-        }
+        if (detachInput.action != null) detachInput.action.Enable();
     }
 
-    private void OnGrab(SelectEnterEventArgs args) { currentInteractor = args.interactorObject; Unstick(); }
-    private void OnRelease(SelectExitEventArgs args) { currentInteractor = null; Unstick(); }
+    void OnDisable()
+    {
+        if (detachInput.action != null) detachInput.action.Disable();
+    }
+
+    private void OnGrab(SelectEnterEventArgs args)
+    {
+        currentInteractor = args.interactorObject;
+        Unstick(); // Grab = Detach from wall
+    }
+
+    private void OnRelease(SelectExitEventArgs args)
+    {
+        currentInteractor = null;
+        Unstick(); // Drop = Detach from wall
+    }
 
     void OnCollisionEnter(Collision collision)
     {
+        // 1. Must be holding it
+        // 2. Must not be stuck
+        // 3. Must be cooldown ready
         if (isStuck || currentInteractor == null || Time.time < nextStickTime) return;
 
-        if (collision.gameObject.CompareTag(iceTag))
+        // 4. Tag Check
+        if (!collision.gameObject.CompareTag(iceTag) && !collision.gameObject.CompareTag("Climbable")) return;
+
+        // 5. Tip Collider & Velocity Check
+        foreach (ContactPoint contact in collision.contacts)
         {
-            foreach (ContactPoint contact in collision.contacts)
+            if (contact.thisCollider == tipCollider && collision.relativeVelocity.magnitude > hitVelocityThreshold)
             {
-                if (contact.thisCollider == tipCollider && collision.relativeVelocity.magnitude > hitVelocityThreshold)
-                {
-                    StickToWall();
-                    return;
-                }
+                StickToWall();
+                return;
             }
         }
     }
 
     private void StickToWall()
     {
-        if (TryStartLocomotionImmediately())
+        // NO "TryStartLocomotionImmediately" HERE - This was the blocker.
+        // We just force the state.
+
+        isStuck = true;
+        activePicks++;
+
+        // Physics: Freeze
+        rb.isKinematic = true;
+        interactable.movementType = XRBaseInteractable.MovementType.Kinematic;
+        interactable.trackPosition = false;
+        interactable.trackRotation = false;
+
+        // Visuals
+        transform.position += transform.forward * penetrationDepth;
+
+        // Haptics
+        if (currentInteractor is XRBaseInputInteractor inputInteractor)
         {
-            isStuck = true;
-            activePicks++;
-
-            rb.isKinematic = true;
-            interactable.movementType = XRBaseInteractable.MovementType.Kinematic;
-            interactable.trackPosition = false;
-            interactable.trackRotation = false;
-
-            transform.position += transform.forward * penetrationDepth;
-
-            // Haptics
-            if (currentInteractor != null)
-            {
-                previousInteractorPosition = currentInteractor.transform.position;
-                if (currentInteractor is XRBaseInputInteractor inputInteractor)
-                    inputInteractor.SendHapticImpulse(0.7f, 0.15f);
-            }
-
-            // Save step offset to prevent popping up
-            if (characterController != null && activePicks == 1)
-                defaultStepOffset = characterController.stepOffset;
-
-            if (characterController != null) characterController.stepOffset = 0;
-
-            UpdatePlayerSystems();
+            inputInteractor.SendHapticImpulse(0.7f, 0.15f);
         }
+
+        // Initialize Movement
+        if (currentInteractor != null)
+        {
+            previousInteractorPosition = currentInteractor.transform.position;
+        }
+
+        // Disable Step Offset (Prevent popping up)
+        if (characterController != null && activePicks == 1)
+            defaultStepOffset = characterController.stepOffset;
+
+        if (characterController != null) characterController.stepOffset = 0;
+
+        UpdatePlayerSystems();
     }
 
     private void Unstick()
     {
         if (!isStuck) return;
 
-        TryEndLocomotion();
-
         isStuck = false;
         activePicks--;
-        // Safety clamp
         if (activePicks < 0) activePicks = 0;
 
+        // Physics: Release
         rb.isKinematic = false;
         interactable.trackPosition = true;
         interactable.trackRotation = true;
@@ -156,7 +173,7 @@ public class IcePick : LocomotionProvider
 
         nextStickTime = Time.time + detachCooldown;
 
-        // Restore step offset immediately so we can walk over bumps
+        // Restore Step Offset
         if (characterController != null)
         {
             characterController.stepOffset = defaultStepOffset;
@@ -167,45 +184,35 @@ public class IcePick : LocomotionProvider
 
     private void UpdatePlayerSystems()
     {
-        // LOGIC FIX:
-        // Only disable movement if picks are actively stuck.
-        // If picks are 0, we FORCE enable everything. 
-        // We let standard XRI handle the "Hand vs Walk" conflict to avoid getting locked out.
+        // If climbing with ANY pick, disable walking.
+        bool climbing = activePicks > 0;
 
-        bool anyPickStuck = activePicks > 0;
-
-        if (anyPickStuck)
-        {
-            if (moveProvider != null) moveProvider.enabled = false;
-            if (bodyTransformer != null) bodyTransformer.enabled = false;
-        }
-        else
-        {
-            if (moveProvider != null) moveProvider.enabled = true;
-            if (bodyTransformer != null) bodyTransformer.enabled = true;
-        }
+        if (moveProvider != null) moveProvider.enabled = !climbing;
+        if (bodyTransformer != null) bodyTransformer.enabled = !climbing;
     }
 
     void Update()
     {
-        // Failsafe: Ensure systems stay off if we are supposed to be climbing
+        // Fail-safe to ensure walking stays off while climbing
         if (activePicks > 0)
         {
-            if (bodyTransformer != null && bodyTransformer.enabled) bodyTransformer.enabled = false;
             if (moveProvider != null && moveProvider.enabled) moveProvider.enabled = false;
         }
 
-        if (isStuck && detachInput.action.WasPressedThisFrame())
+        // Manual Detach
+        if (isStuck && detachInput.action != null && detachInput.action.WasPressedThisFrame())
         {
             Unstick();
             return;
         }
 
+        // Climbing Logic
         if (isStuck && currentInteractor != null && xrOrigin != null)
         {
-            Vector3 currentPos = currentInteractor.transform.position;
-            Vector3 velocity = (currentPos - previousInteractorPosition) / Time.deltaTime;
+            Vector3 currentHandPos = currentInteractor.transform.position;
+            Vector3 velocity = (currentHandPos - previousInteractorPosition) / Time.deltaTime;
 
+            // Yank Detach
             if (useYankToDetach)
             {
                 float pullDirMatch = Vector3.Dot(velocity.normalized, -transform.forward);
@@ -216,13 +223,18 @@ public class IcePick : LocomotionProvider
                 }
             }
 
-            Vector3 handMovement = currentPos - previousInteractorPosition;
+            // Move Player
+            Vector3 handMovement = currentHandPos - previousInteractorPosition;
             Vector3 climbMove = -handMovement;
 
             if (characterController != null)
+            {
                 characterController.Move(climbMove);
+            }
             else
+            {
                 xrOrigin.transform.position += climbMove;
+            }
 
             previousInteractorPosition = currentInteractor.transform.position;
         }
