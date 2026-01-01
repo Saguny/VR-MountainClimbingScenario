@@ -1,14 +1,14 @@
 fileFormatVersion: 2
-guid: 5a3175c146b490644a93c256cac0037a
+guid: dd45a34eb60a82842a0609ca35569f84
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
   externalObjects:
   - first:
-      type: UnityEngine:Material
+      type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: tree06
-    second: {fileID: 2100000, guid: a632aa6945c14ff44a3ecda0a5c7f44c, type: 2}
+      name: farm_build_004
+    second: {fileID: 2800000, guid: 515979e0753009a4db5db90dd59dd174, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
