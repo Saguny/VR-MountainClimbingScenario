@@ -7,6 +7,7 @@ TagManager:
   - Ice
   - climbableObjects
   - Anchor
+  - SlipperyStone
   layers:
   - Default
   - TransparentFX

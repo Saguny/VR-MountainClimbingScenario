@@ -15,8 +15,8 @@ GameObject:
   - component: {fileID: 270186430064453879}
   - component: {fileID: 4261820329172013518}
   m_Layer: 0
-  m_Name: Climbable_stone4
-  m_TagString: climbableObjects
+  m_Name: icyStone4
+  m_TagString: Ice
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
@@ -44,7 +44,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 773182592643608447}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: -2228417370725966487, guid: 06160fae8f408fe47a7207f8808fc20a, type: 3}
 --- !u!23 &4298784097400483301
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -268,7 +268,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6628651804992776706}
-  m_Mesh: {fileID: -8678823145569952518, guid: 06160fae8f408fe47a7207f8808fc20a, type: 3}
+  m_Mesh: {fileID: -2228417370725966487, guid: 06160fae8f408fe47a7207f8808fc20a, type: 3}
 --- !u!23 &8030361970720624297
 MeshRenderer:
   m_ObjectHideFlags: 0

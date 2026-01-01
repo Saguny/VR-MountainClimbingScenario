@@ -14,9 +14,10 @@ GameObject:
   - component: {fileID: 228126805576655233}
   - component: {fileID: 270186430064453879}
   - component: {fileID: 4261820329172013518}
+  - component: {fileID: -3912857651181061710}
   m_Layer: 0
-  m_Name: Climbable_stone1
-  m_TagString: climbableObjects
+  m_Name: SlipperyStone1
+  m_TagString: SlipperyStone
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
@@ -29,7 +30,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 773182592643608447}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.20222117, y: -0.52863157, z: 0.012779951}
   m_LocalScale: {x: 0.117400914, y: 0.09580491, z: 0.20487648}
   m_ConstrainProportionsScale: 0
@@ -228,6 +229,22 @@ MonoBehaviour:
       m_AllowFreeYMovement: 1
       m_AllowFreeZMovement: 1
     m_Variable: {fileID: 0}
+--- !u!114 &-3912857651181061710
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 773182592643608447}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db34d9c7af8d04841b312edfe8fb9c9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Mechanics.SlipperyStone
+  _targetTag: SlipperyStone
+  _maxGripTime: 5
+  _cooldownTime: 5
+  _radialUIPrefab: {fileID: 8222856063068747926, guid: 1d46b05b1a8ddc642ade9c293939921d, type: 3}
 --- !u!1 &6628651804992776706
 GameObject:
   m_ObjectHideFlags: 0
@@ -294,7 +311,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -6478536213147159724, guid: 06160fae8f408fe47a7207f8808fc20a, type: 3}
+  - {fileID: 2100000, guid: 65f826ce837cdbf42912e62d374aa0fa, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
