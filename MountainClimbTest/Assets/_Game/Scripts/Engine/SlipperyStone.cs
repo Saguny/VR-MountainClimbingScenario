@@ -51,15 +51,6 @@ namespace Game.Mechanics
                 return;
             }
 
-            if (_breathManager != null)
-            {
-                if (!_breathManager.TryConsumeStaminaForGrab())
-                {
-                    ForceRelease(args.manager, args.interactorObject);
-                    return;
-                }
-            }
-
             // --- IMPROVED UI LOGIC FROM OLD SCRIPT ---
             CleanupUI();
             if (_radialUIPrefab != null)

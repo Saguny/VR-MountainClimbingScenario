@@ -32,18 +32,21 @@ namespace Game.Mechanics
             }
         }
 
+        private void OnEnable() => _interactor.selectEntered.AddListener(OnSelectEntered);
+        private void OnDisable() => _interactor.selectEntered.RemoveListener(OnSelectEntered);
+
         private void OnSelectEntered(SelectEnterEventArgs args)
         {
-            if (args.interactableObject.transform.CompareTag("climbableObjects"))
+            // Hier fügst du alle Tags hinzu, die Stamina kosten sollen
+            if (args.interactableObject.transform.CompareTag("climbableObjects") ||
+                args.interactableObject.transform.CompareTag("SlipperyStone") ||
+                args.interactableObject.transform.CompareTag("Ice"))
             {
                 if (_breathManager != null)
                 {
-                    // CHANGE: Call TryConsumeStaminaForGrab() which handles the subtraction logic
-                    if (!_breathManager.TryConsumeStaminaForGrab())
-                    {
-                        // Force release if they don't have enough stamina to even start the grab
-                        args.manager.CancelInteractableSelection((UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable)_interactor);
-                    }
+                    // Versuche Stamina abzuziehen. 
+                    // Falls nicht genug da ist, erzwingt die ExhaustionRoutine im Update den Drop.
+                    _breathManager.TryConsumeStaminaForGrab();
                 }
             }
         }
