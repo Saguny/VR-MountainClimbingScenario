@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 2125477734967575109}
   - component: {fileID: 5160458214446835613}
   - component: {fileID: 8824698146836031892}
+  - component: {fileID: 5433383254473312737}
   m_Layer: 0
   m_Name: FlareGun
   m_TagString: Untagged
@@ -28,13 +29,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4357250250534441281}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.5225082, y: -0.46678248, z: -0.51991296, w: 0.4886613}
+  m_LocalRotation: {x: 0.5225071, y: -0.46678472, z: -0.51991045, w: 0.48866293}
   m_LocalPosition: {x: 1.662, y: 0.0731, z: -1.4079}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7098438340719986665}
   - {fileID: 8638469993297831592}
+  - {fileID: 658198013594787181}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 1.449, y: 271.043, z: 265.028}
 --- !u!54 &129345084767458186
@@ -139,7 +141,7 @@ MonoBehaviour:
   m_StartingInteractionStrengthFilters: []
   m_AutoFindParentInteractableInHierarchy: 0
   m_ParentInteractableObject: {fileID: 0}
-  m_AttachTransform: {fileID: 0}
+  m_AttachTransform: {fileID: 658198013594787181}
   m_SecondaryAttachTransform: {fileID: 0}
   m_UseDynamicAttach: 0
   m_MatchAttachPosition: 1
@@ -207,7 +209,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
-  m_Volume: 1
+  m_Volume: 0.509
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -304,17 +306,62 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Mechanics.Tools.FlareGun
   objectiveTarget: {fileID: 0}
-  requiredRange: 2
+  requiredRange: 3
+  sensorSuite: {fileID: 0}
+  maxLevelDeviation: 10
   warningSubtitle: {fileID: 0}
-  warningMessage: Signal too weak! Move closer to the objective.
   warningDuration: 3
-  flareProjectilePrefab: {fileID: 0}
-  firePoint: {fileID: 0}
+  flareProjectilePrefab: {fileID: 1664856845731002035, guid: ab985f935d78313419e4fade38fb5441, type: 3}
+  firePoint: {fileID: 8638469993297831592}
   rescueDelay: 60
-  fireSound: {fileID: 0}
+  fireSound: {fileID: 8300000, guid: 09cf5f3ee7765694aa1c1d5bd897a10f, type: 3}
   rescueHelicopterSound: {fileID: 0}
-  nextSceneName: EndScene
   headsetFader: {fileID: 0}
+  nextSceneName: EndScene
+--- !u!114 &5433383254473312737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4357250250534441281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03b03daec89569046bd8870bd3020062, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HandPoseSwitcher
+  PoseID: 1
+--- !u!1 &4956196180445681688
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 658198013594787181}
+  m_Layer: 0
+  m_Name: HandAttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &658198013594787181
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4956196180445681688}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: -0.001, y: 0.0239, z: -0.0049}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3453340676611064102}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!1 &8318615488898120912
 GameObject:
   m_ObjectHideFlags: 0

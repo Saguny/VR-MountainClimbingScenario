@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 228126805576655233}
   - component: {fileID: 270186430064453879}
   - component: {fileID: 4261820329172013518}
+  - component: {fileID: 6888745255450857992}
   m_Layer: 0
   m_Name: Climbable_stone1
   m_TagString: climbableObjects
@@ -29,12 +30,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 773182592643608447}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.20222117, y: -0.52863157, z: 0.012779951}
   m_LocalScale: {x: 0.117400914, y: 0.09580491, z: 0.20487648}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7172773853710181608}
+  - {fileID: 133772610040008848}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &651661632946118340
@@ -158,7 +160,7 @@ MonoBehaviour:
   m_Colliders: []
   m_InteractionLayers:
     m_Bits: 1
-  m_DistanceCalculationMode: 1
+  m_DistanceCalculationMode: 0
   m_SelectMode: 1
   m_FocusMode: 1
   m_CustomReticle: {fileID: 0}
@@ -218,7 +220,7 @@ MonoBehaviour:
   m_ParentInteractableObject: {fileID: 0}
   m_ClimbProvider: {fileID: 0}
   m_ClimbTransform: {fileID: 6283570426434520072}
-  m_FilterInteractionByDistance: 1
+  m_FilterInteractionByDistance: 0
   m_MaxInteractionDistance: 0.1
   m_ClimbAssistanceTeleportVolume: {fileID: 0}
   m_ClimbSettingsOverride:
@@ -228,6 +230,19 @@ MonoBehaviour:
       m_AllowFreeYMovement: 1
       m_AllowFreeZMovement: 1
     m_Variable: {fileID: 0}
+--- !u!114 &6888745255450857992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 773182592643608447}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f7c247b7bee3a4499c3ba54185cf1b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SmartClimbAttach
+  staticAttachPoint: {fileID: 133772610040008848}
 --- !u!1 &6628651804992776706
 GameObject:
   m_ObjectHideFlags: 0
@@ -294,7 +309,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -6478536213147159724, guid: 06160fae8f408fe47a7207f8808fc20a, type: 3}
+  - {fileID: 2100000, guid: 3cf05092c7d2da9448dc64cfcf78b6e2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -318,3 +333,34 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &7183334048789501145
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 133772610040008848}
+  m_Layer: 0
+  m_Name: AttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &133772610040008848
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7183334048789501145}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.36909768, y: -0.27177247, z: 0.3349619, w: 0.82322973}
+  m_LocalPosition: {x: 0.246, y: -0.578, z: -1.099}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6283570426434520072}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 90}
