@@ -853,7 +853,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Systems.BreathManager
   sensorSuite: {fileID: 249757934}
   moveProvider: {fileID: 2093322021}
-  maxStamina: 100
+  maxStamina: 20
   currentStamina: 0
   lowStaminaThreshold: 25
   baseGrabCost: 2

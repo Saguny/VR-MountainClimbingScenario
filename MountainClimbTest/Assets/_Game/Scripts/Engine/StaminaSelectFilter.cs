@@ -8,6 +8,7 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 public class StaminaSelectFilter : MonoBehaviour, IXRSelectFilter
 {
     private BreathManager _breathManager;
+    private const float GRAB_COST = 3.0f; // Set this to match your BreathManager's cost
 
     public bool canProcess => true;
 
@@ -18,13 +19,12 @@ public class StaminaSelectFilter : MonoBehaviour, IXRSelectFilter
 
     public bool Process(IXRSelectInteractor interactor, IXRSelectInteractable interactable)
     {
-        // Only filter climbable objects
         if (interactable.transform.CompareTag("SlipperyStone") || interactable.transform.CompareTag("climbableObjects"))
         {
-            // If we don't have at least 2 stamina, block the interaction
-            if (_breathManager != null && _breathManager.currentStamina < 2f)
+            // BLOCK THE GRAB if stamina is less than the actual cost
+            if (_breathManager != null && _breathManager.currentStamina < GRAB_COST)
             {
-                return false; // The hand will simply pass through the rock
+                return false; // Hand ignores the rock completely
             }
         }
         return true;

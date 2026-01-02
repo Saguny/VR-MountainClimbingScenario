@@ -52,9 +52,9 @@ namespace Game.Mechanics
                 return;
             }
 
-            // 2. Stamina Check
             if (_breathManager != null)
             {
+                // CHANGE: Actually trigger the depletion logic in BreathManager
                 if (!_breathManager.TryConsumeStaminaForGrab())
                 {
                     ForceRelease(args.manager, args.interactorObject);
@@ -73,11 +73,34 @@ namespace Game.Mechanics
             _gripCoroutine = StartCoroutine(GripTimer(args.manager, args.interactorObject));
         }
 
+        // FIX THE TYPO HERE: Change 'ivate' to 'private'
         private void ForceRelease(XRInteractionManager manager, IXRSelectInteractor interactor)
         {
-            // This tells the manager to break the bond between THIS hand and THIS stone
-            manager.CancelInteractableSelection((IXRSelectInteractable)interactor);
+            if (_interactable is IXRSelectInteractable selectInteractable)
+            {
+                manager.CancelInteractableSelection(selectInteractable);
+            }
+
+            if (interactor is XRBaseInteractor baseInteractor)
+            {
+                StartCoroutine(TemporaryHandKill(baseInteractor));
+            }
         }
+
+        private IEnumerator TemporaryHandKill(XRBaseInteractor interactor)
+        {
+            var layers = interactor.interactionLayers;
+            interactor.interactionLayers = 0;
+            interactor.allowSelect = false;
+
+            // A 0.2s delay is long enough for the player to begin falling 
+            // so they aren't touching the stone anymore when it re-enables
+            yield return new WaitForSeconds(0.2f);
+
+            interactor.interactionLayers = layers;
+            interactor.allowSelect = true;
+        }
+
 
         private void OnRelease(SelectExitEventArgs args) => CleanupUI();
 
@@ -97,8 +120,8 @@ namespace Game.Mechanics
                 yield return null;
             }
 
-            CleanupUI();
             ForceRelease(manager, interactor);
+            CleanupUI();
             StartCoroutine(CooldownTimer());
         }
 
