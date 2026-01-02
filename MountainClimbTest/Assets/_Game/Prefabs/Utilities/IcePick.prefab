@@ -27,7 +27,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3310238675963261167}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.011079997, y: -1.22192, z: -1.18205}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -62,7 +62,7 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!114 &6497310200413931374
@@ -224,13 +224,14 @@ MonoBehaviour:
   iceTag: Ice
   hitVelocityThreshold: 1.5
   penetrationDepth: 0.05
-  detachCooldown: 1
+  detachCooldown: 0.2
   useYankToDetach: 1
   pullOutThreshold: 1.5
   tipCollider: {fileID: 576420120703174772}
   characterController: {fileID: 0}
   bodyTransformer: {fileID: 0}
   moveProvider: {fileID: 0}
+  breathManager: {fileID: 0}
 --- !u!1 &4157857677969074810
 GameObject:
   m_ObjectHideFlags: 0
@@ -257,7 +258,7 @@ Transform:
   m_GameObject: {fileID: 4157857677969074810}
   serializedVersion: 2
   m_LocalRotation: {x: 0.050457243, y: -0, z: -0, w: 0.99872625}
-  m_LocalPosition: {x: 0.017699987, y: 0.2038, z: 0.083}
+  m_LocalPosition: {x: 0.017699987, y: 0.129, z: 0.055}
   m_LocalScale: {x: 0.028213248, y: 0.035864748, z: 0.17466885}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -283,7 +284,7 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: -0.0000019073486, z: 0}
+  m_Center: {x: 0, y: 1.9, z: 0}
 --- !u!1 &7534033892998767392
 GameObject:
   m_ObjectHideFlags: 0
@@ -310,7 +311,7 @@ Transform:
   m_GameObject: {fileID: 7534033892998767392}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0.049913507, w: 0.9987536}
-  m_LocalPosition: {x: 0.0017, y: 0.043729305, z: -0.017999887}
+  m_LocalPosition: {x: 0.0017, y: -0.043, z: -0.017999887}
   m_LocalScale: {x: 0.028213248, y: 0.45283768, z: 0.071267225}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -336,7 +337,7 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 1, y: 0.72, z: 1}
-  m_Center: {x: 0, y: -0.12, z: 0}
+  m_Center: {x: 0, y: 0.12, z: 0}
 --- !u!1001 &2090276582310197204
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -7,13 +7,13 @@ using UnityEngine.XR.Interaction.Toolkit.Locomotion;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 using UnityEngine.XR.Interaction.Toolkit.Transformers;
 using Unity.XR.CoreUtils;
-using MountainRescue.Interfaces; 
+using MountainRescue.Interfaces;
+using MountainRescue.Systems;
 
 [RequireComponent(typeof(XRGrabInteractable))]
 [RequireComponent(typeof(Rigidbody))]
 public class IcePick : LocomotionProvider, IAnchorStateProvider
 {
-    // --- GLOBAL STATE ---
     private static int activePicks = 0;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -40,6 +40,7 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
     public CharacterController characterController;
     public XRBodyTransformer bodyTransformer;
     public DynamicMoveProvider moveProvider;
+    public BreathManager breathManager;
 
     private XRGrabInteractable interactable;
     private Rigidbody rb;
@@ -49,15 +50,15 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
     private Vector3 previousInteractorPosition;
     private float nextStickTime = 0f;
     private float defaultStepOffset;
+
     public bool IsAnchored()
     {
         return isStuck;
     }
-    
 
     protected override void Awake()
     {
-        base.Awake(); // Initialize LocomotionProvider
+        base.Awake();
 
         interactable = GetComponent<XRGrabInteractable>();
         rb = GetComponent<Rigidbody>();
@@ -66,8 +67,8 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
         if (characterController == null) characterController = FindFirstObjectByType<CharacterController>();
         if (bodyTransformer == null) bodyTransformer = FindFirstObjectByType<XRBodyTransformer>();
         if (moveProvider == null) moveProvider = FindFirstObjectByType<DynamicMoveProvider>();
+        if (breathManager == null) breathManager = FindFirstObjectByType<BreathManager>();
 
-        // We use VelocityTracking so it feels heavy/real until it sticks
         interactable.movementType = XRBaseInteractable.MovementType.VelocityTracking;
 
         interactable.selectEntered.AddListener(OnGrab);
@@ -87,31 +88,43 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
     private void OnGrab(SelectEnterEventArgs args)
     {
         currentInteractor = args.interactorObject;
-        Unstick(); // Grab = Detach from wall
+        Unstick();
     }
 
     private void OnRelease(SelectExitEventArgs args)
     {
         currentInteractor = null;
-        Unstick(); // Drop = Detach from wall
+        Unstick();
     }
 
     void OnCollisionEnter(Collision collision)
     {
-        // 1. Must be holding it
-        // 2. Must not be stuck
-        // 3. Must be cooldown ready
         if (isStuck || currentInteractor == null || Time.time < nextStickTime) return;
 
-        // 4. Tag Check
         if (!collision.gameObject.CompareTag(iceTag) && !collision.gameObject.CompareTag("climbableObjects")) return;
 
-        // 5. Tip Collider & Velocity Check
         foreach (ContactPoint contact in collision.contacts)
         {
             if (contact.thisCollider == tipCollider && collision.relativeVelocity.magnitude > hitVelocityThreshold)
             {
-                StickToWall();
+                // Check with the Stamina System before sticking
+                if (breathManager != null)
+                {
+                    if (breathManager.TryConsumeStaminaForGrab())
+                    {
+                        StickToWall();
+                    }
+                    else
+                    {
+                        // Play a 'fail' sound or effect here if desired
+                        Debug.Log("IcePick: Too tired to strike!");
+                    }
+                }
+                else
+                {
+                    // Fallback if system is missing
+                    StickToWall();
+                }
                 return;
             }
         }
@@ -119,34 +132,26 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
 
     private void StickToWall()
     {
-        // NO "TryStartLocomotionImmediately" HERE - This was the blocker.
-        // We just force the state.
-
         isStuck = true;
         activePicks++;
 
-        // Physics: Freeze
         rb.isKinematic = true;
         interactable.movementType = XRBaseInteractable.MovementType.Kinematic;
         interactable.trackPosition = false;
         interactable.trackRotation = false;
 
-        // Visuals
         transform.position += transform.forward * penetrationDepth;
 
-        // Haptics
         if (currentInteractor is XRBaseInputInteractor inputInteractor)
         {
             inputInteractor.SendHapticImpulse(0.7f, 0.15f);
         }
 
-        // Initialize Movement
         if (currentInteractor != null)
         {
             previousInteractorPosition = currentInteractor.transform.position;
         }
 
-        // Disable Step Offset (Prevent popping up)
         if (characterController != null && activePicks == 1)
             defaultStepOffset = characterController.stepOffset;
 
@@ -163,7 +168,6 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
         activePicks--;
         if (activePicks < 0) activePicks = 0;
 
-        // Physics: Release
         rb.isKinematic = false;
         interactable.trackPosition = true;
         interactable.trackRotation = true;
@@ -171,7 +175,6 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
 
         nextStickTime = Time.time + detachCooldown;
 
-        // Restore Step Offset
         if (characterController != null)
         {
             characterController.stepOffset = defaultStepOffset;
@@ -182,7 +185,6 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
 
     private void UpdatePlayerSystems()
     {
-        // If climbing with ANY pick, disable walking.
         bool climbing = activePicks > 0;
 
         if (moveProvider != null) moveProvider.enabled = !climbing;
@@ -191,26 +193,22 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
 
     void Update()
     {
-        // Fail-safe to ensure walking stays off while climbing
         if (activePicks > 0)
         {
             if (moveProvider != null && moveProvider.enabled) moveProvider.enabled = false;
         }
 
-        // Manual Detach
         if (isStuck && detachInput.action != null && detachInput.action.WasPressedThisFrame())
         {
             Unstick();
             return;
         }
 
-        // Climbing Logic
         if (isStuck && currentInteractor != null && xrOrigin != null)
         {
             Vector3 currentHandPos = currentInteractor.transform.position;
             Vector3 velocity = (currentHandPos - previousInteractorPosition) / Time.deltaTime;
 
-            // Yank Detach
             if (useYankToDetach)
             {
                 float pullDirMatch = Vector3.Dot(velocity.normalized, -transform.forward);
@@ -221,7 +219,6 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
                 }
             }
 
-            // Move Player
             Vector3 handMovement = currentHandPos - previousInteractorPosition;
             Vector3 climbMove = -handMovement;
 
