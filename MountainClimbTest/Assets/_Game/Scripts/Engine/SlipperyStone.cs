@@ -45,7 +45,6 @@ namespace Game.Mechanics
 
         private void OnGrab(SelectEnterEventArgs args)
         {
-            // 1. Immediate rejection if cooldown or wrong tag
             if (!CompareTag(_targetTag) || _isOnCooldown)
             {
                 ForceRelease(args.manager, args.interactorObject);
@@ -54,7 +53,6 @@ namespace Game.Mechanics
 
             if (_breathManager != null)
             {
-                // CHANGE: Actually trigger the depletion logic in BreathManager
                 if (!_breathManager.TryConsumeStaminaForGrab())
                 {
                     ForceRelease(args.manager, args.interactorObject);
@@ -62,18 +60,34 @@ namespace Game.Mechanics
                 }
             }
 
-            // 3. Success logic
+            // --- IMPROVED UI LOGIC FROM OLD SCRIPT ---
             CleanupUI();
             if (_radialUIPrefab != null)
             {
-                _currentUI = Instantiate(_radialUIPrefab, transform);
-                _radialImage = _currentUI.GetComponentInChildren<Image>();
+                // Attach UI to the HAND so it follows movement
+                Transform handTransform = args.interactorObject.transform;
+                _currentUI = Instantiate(_radialUIPrefab, handTransform);
+
+                // Find the specific "Fill" image in the prefab
+                Image[] allImages = _currentUI.GetComponentsInChildren<Image>(true);
+                foreach (Image img in allImages)
+                {
+                    if (img.gameObject.name == "Fill")
+                    {
+                        _radialImage = img;
+                        break;
+                    }
+                }
+
+                // UI Offset so it's visible above the hand
+                _currentUI.transform.localPosition = new Vector3(0, 0.05f, 0);
+                _currentUI.transform.localRotation = Quaternion.Euler(90, 0, 0);
             }
+            // ----------------------------------------
 
             _gripCoroutine = StartCoroutine(GripTimer(args.manager, args.interactorObject));
         }
 
-        // FIX THE TYPO HERE: Change 'ivate' to 'private'
         private void ForceRelease(XRInteractionManager manager, IXRSelectInteractor interactor)
         {
             if (_interactable is IXRSelectInteractable selectInteractable)
@@ -92,15 +106,10 @@ namespace Game.Mechanics
             var layers = interactor.interactionLayers;
             interactor.interactionLayers = 0;
             interactor.allowSelect = false;
-
-            // A 0.2s delay is long enough for the player to begin falling 
-            // so they aren't touching the stone anymore when it re-enables
             yield return new WaitForSeconds(0.2f);
-
             interactor.interactionLayers = layers;
             interactor.allowSelect = true;
         }
-
 
         private void OnRelease(SelectExitEventArgs args) => CleanupUI();
 
@@ -129,7 +138,7 @@ namespace Game.Mechanics
         {
             _isOnCooldown = true;
             var oldMask = _interactable.interactionLayers;
-            _interactable.interactionLayers = 0; // Disable all interactions
+            _interactable.interactionLayers = 0;
             yield return new WaitForSeconds(_cooldownTime);
             _interactable.interactionLayers = oldMask;
             _isOnCooldown = false;
