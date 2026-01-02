@@ -6,6 +6,11 @@ public class GlovePoseController : MonoBehaviour
 {
     [SerializeField] private Animator gloveAnimator;
     [SerializeField] private Transform handVisualMesh; // Dein hand.r Modell
+    [SerializeField] private bool isLeftHand = false;
+
+    [Header("Visual Fine-Tuning")]
+    [SerializeField] private Vector3 positionOffset = Vector3.zero;
+    [SerializeField] private Vector3 rotationOffset = Vector3.zero;
 
     private IXRSelectInteractor interactor;
     private bool isLockedToStone = false;
@@ -60,12 +65,29 @@ public class GlovePoseController : MonoBehaviour
 
     void LateUpdate()
     {
-        // REIN VISUELL: Wir zwingen nur das Mesh an den Punkt.
-        // Das hat 0,0 Auswirkung auf die Kletter-Physik oder den ClimbProvider.
         if (isLockedToStone && currentTargetAttach != null)
         {
-            handVisualMesh.position = currentTargetAttach.position;
-            handVisualMesh.rotation = currentTargetAttach.rotation;
+            // 1. Basis-Werte vom Anker holen
+            Vector3 targetPos = currentTargetAttach.position;
+            Quaternion targetRot = currentTargetAttach.rotation;
+
+            if (isLeftHand)
+            {
+                // 2. Spiegel-Logik (Invertierung von Y und Z für die Symmetrie)
+                targetRot = new Quaternion(targetRot.x, -targetRot.y, -targetRot.z, targetRot.w);
+
+                // 3. Offset-Korrektur (Lokal zum Ziel-Anker)
+                // Wir wenden den Positions-Offset im lokalen Raum des Ankers an,
+                // damit "Links" auch wirklich "Links" bleibt, egal wie der Stein gedreht ist.
+                targetPos += currentTargetAttach.TransformDirection(positionOffset);
+
+                // Rotationsoffset hinzufügen (z.B. falls die Hand noch leicht schräg ist)
+                targetRot *= Quaternion.Euler(rotationOffset);
+            }
+
+            // 4. Finale Zuweisung
+            handVisualMesh.position = targetPos;
+            handVisualMesh.rotation = targetRot;
         }
     }
 }
