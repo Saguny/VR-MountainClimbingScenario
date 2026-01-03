@@ -10,8 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 97b43aa559389e54d93005f0a9453ead, type: 3}
-  m_Name: _1
+  m_Name: diditwork
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Dialogue.DialogueLine
-  textContent: Hey, My name is Jermy! Finally you're here!
-  voiceClip: {fileID: 8300000, guid: 75ed2356f89ec4d469eff08465dbf5e1, type: 3}
-  displayDuration: 4
+  textContent: Did it work?
+  voiceClip: {fileID: 0}
+  displayDuration: 5
+  animationTrigger: 

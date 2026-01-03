@@ -2,16 +2,15 @@ using UnityEngine;
 
 namespace MountainRescue.Dialogue
 {
-    [CreateAssetMenu(fileName = "New Line", menuName = "RescueSim/Dialogue/Line")]
+    [CreateAssetMenu(fileName = "New Dialogue Line", menuName = "RescueSim/Dialogue/Line")]
     public class DialogueLine : ScriptableObject
     {
-        [TextArea(3, 10)]
         public string textContent;
-
-        [Tooltip("Optional: Drag a voiceover clip here.")]
         public AudioClip voiceClip;
+        public float displayDuration = 3f;
 
-        [Tooltip("How long this specific line stays on screen.")]
-        public float displayDuration = 4f;
+        [Header("Animation Sync")]
+        [Tooltip("Trigger name: _jumping, _speaking, _speakingWorried")]
+        public string animationTrigger;
     }
 }

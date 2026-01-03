@@ -10,9 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f1b3db8d0d47d324b9890da89b5c1f45, type: 3}
-  m_Name: Seq_Intro
+  m_Name: Intro2
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Dialogue.DialogueSequence
   lines:
-  - {fileID: 11400000, guid: cf948c4fdd8d93b46af24ecbe709411f, type: 2}
-  - {fileID: 11400000, guid: a8dd751f36c46c844bbedb90ce9efed4, type: 2}
-  - {fileID: 11400000, guid: 58c0396fa4bd93c469150c148a3a4205, type: 2}
+  - {fileID: 11400000, guid: 9f7a025314e937340b05ae610ac06421, type: 2}
+  moveToPosition: 0
+  waypointName: 
+  moveSpeed: 2
+  talkWhileWalking: 0
+  nextSequence: {fileID: 0}
