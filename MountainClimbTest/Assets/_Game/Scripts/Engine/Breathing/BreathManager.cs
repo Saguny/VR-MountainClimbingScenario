@@ -9,7 +9,7 @@ namespace MountainRescue.Systems
     {
         [Header("Dependencies")]
         public PlayerSensorSuite sensorSuite;
-        public LocomotionProvider moveProvider; // Drag your DynamicMoveProvider here
+        public LocomotionProvider moveProvider;
 
         [Header("Stamina Settings")]
         public float maxStamina = 100f;
@@ -24,7 +24,8 @@ namespace MountainRescue.Systems
 
         [Header("Altitude & Pressure")]
         public float thinAirThreshold = 500f;
-        public AnimationCurve drainRateByPressure; // X: hPa, Y: drain/sec
+        public AnimationCurve drainRateByPressure;
+        public float fallbackThinAirDrain = 1.0f;
 
         [Header("Status")]
         public bool hasOxygenTank = false;
@@ -33,6 +34,10 @@ namespace MountainRescue.Systems
         private bool _wasInThinAir = false;
         private bool _lastFocusState;
         private float _logTimer;
+
+        [Header("Oxygen Tank Settings")]
+        public float currentTankFuel = 100f;
+        public float tankUsageCost = 2f;
 
         [Header("Events")]
         public UnityEvent<float> onStaminaChanged;
@@ -49,7 +54,7 @@ namespace MountainRescue.Systems
                 sensorSuite = FindFirstObjectByType<PlayerSensorSuite>();
 
             if (moveProvider == null)
-                Debug.LogWarning("BreathManager: No MoveProvider assigned. Movement lockout will not work.");
+                Debug.LogWarning("BreathManager: No MoveProvider assigned.");
         }
 
         private void Update()
@@ -63,18 +68,24 @@ namespace MountainRescue.Systems
             HandlePassiveDrain(currentHPa);
             HandleRegeneration(currentHPa);
             CheckThinAirThreshold(currentHPa);
+
+            _logTimer += Time.deltaTime;
+            if (_logTimer >= 1.0f)
+            {
+                string zone = (currentHPa < thinAirThreshold) ? "<color=red>THIN AIR</color>" : "<color=cyan>NORMAL</color>";
+                Debug.Log($"<color=white>[STAMINA]</color> {currentStamina:F1}/{maxStamina} | {zone} | Pressure: {currentHPa:F0}hPa");
+                _logTimer = 0;
+            }
         }
 
         private void HandleMovementLockout()
         {
             if (moveProvider == null) return;
 
-            // Lock movement if focusing
             if (isFocusing && moveProvider.enabled)
             {
                 moveProvider.enabled = false;
             }
-            // Re-enable movement if focus is released (and not currently stuck to ice axes)
             else if (!isFocusing && !moveProvider.enabled)
             {
                 moveProvider.enabled = true;
@@ -87,8 +98,6 @@ namespace MountainRescue.Systems
             {
                 onFocusStateChanged.Invoke(isFocusing);
                 _lastFocusState = isFocusing;
-
-                if (isFocusing) Debug.Log("<color=green>[BreathManager]</color> Focus Active. Movement Locked.");
             }
         }
 
@@ -96,8 +105,26 @@ namespace MountainRescue.Systems
         {
             if (hPa < thinAirThreshold)
             {
-                float drain = drainRateByPressure.Evaluate(hPa);
+                float drain = (drainRateByPressure != null && drainRateByPressure.length > 0)
+                    ? drainRateByPressure.Evaluate(hPa)
+                    : fallbackThinAirDrain;
+
+                if (drain <= 0) drain = fallbackThinAirDrain;
+
                 ModifyStamina(-drain * Time.deltaTime);
+            }
+        }
+
+        public void UseOxygenTank()
+        {
+            if (currentTankFuel > 0)
+            {
+                currentTankFuel = Mathf.Max(0, currentTankFuel - tankUsageCost);
+                hasOxygenTank = true;
+            }
+            else
+            {
+                hasOxygenTank = false;
             }
         }
 
@@ -107,22 +134,14 @@ namespace MountainRescue.Systems
 
             if (isFocusing)
             {
-                // In thin air, focus only works with O2 Tank
                 if (!inThinAir || hasOxygenTank)
                 {
                     ModifyStamina(focusRegenRate * Time.deltaTime);
-                    DebugRegen("Focusing");
                 }
             }
-            else if (Time.time - _timeSinceLastGrab > idleHangDelay)
+            else if (!inThinAir && (Time.time - _timeSinceLastGrab > idleHangDelay))
             {
                 ModifyStamina(idleHangRegenRate * Time.deltaTime);
-
-                if (Time.time > _logTimer)
-                {
-                    DebugRegen("Idle Hanging");
-                    _logTimer = Time.time + 1.0f;
-                }
             }
         }
 
@@ -131,8 +150,6 @@ namespace MountainRescue.Systems
             if (sensorSuite == null) return true;
 
             float hPa = sensorSuite.GetPressureHPa();
-
-            // MATH: Every full 20 hPa drop from Sea Level (1013.25) adds +1 cost
             float pressureDrop = 1013.25f - hPa;
             float penalty = Mathf.FloorToInt(Mathf.Max(0, pressureDrop) / 20f);
             float totalCost = baseGrabCost + penalty;
@@ -141,12 +158,9 @@ namespace MountainRescue.Systems
             {
                 ModifyStamina(-totalCost);
                 _timeSinceLastGrab = Time.time;
-
-                Debug.Log($"<color=cyan>[BreathManager]</color> Grab Success! Cost: {totalCost} (Base: {baseGrabCost} + Alt: {penalty}) | Remaining: {currentStamina:F1}");
                 return true;
             }
 
-            Debug.LogWarning($"<color=red>[BreathManager]</color> Grab Failed! Required: {totalCost}, Current: {currentStamina:F1}");
             onStaminaEmpty.Invoke();
             return false;
         }
@@ -159,7 +173,6 @@ namespace MountainRescue.Systems
             if (Mathf.Abs(previousStamina - currentStamina) > 0.01f)
                 onStaminaChanged.Invoke(currentStamina / maxStamina);
 
-            // Trigger Low Breath Vignette state
             if (previousStamina >= lowStaminaThreshold && currentStamina < lowStaminaThreshold)
                 onLowStaminaStateChanged.Invoke(true);
             else if (previousStamina < lowStaminaThreshold && currentStamina >= lowStaminaThreshold)
@@ -173,17 +186,11 @@ namespace MountainRescue.Systems
             {
                 onThinAirReached.Invoke();
                 _wasInThinAir = true;
-                Debug.Log("<color=orange>[BreathManager]</color> Entered Thin Air Zone!");
             }
             else if (!inThinAir)
             {
                 _wasInThinAir = false;
             }
-        }
-
-        private void DebugRegen(string source)
-        {
-            Debug.Log($"<color=green>[BreathManager]</color> {source}... Stamina: {currentStamina:F1}");
         }
     }
 }
