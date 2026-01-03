@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97b43aa559389e54d93005f0a9453ead, type: 3}
+  m_Name: 22
+  m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Dialogue.DialogueLine
+  textContent: Great Job!
+  voiceClip: {fileID: 8300000, guid: 2627f96914b63c843810d1ceb8215bcb, type: 3}
+  extraDelay: 0.5
+  animationTrigger: 
+  triggerCount: 1

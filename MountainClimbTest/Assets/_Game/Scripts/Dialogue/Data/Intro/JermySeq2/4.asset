@@ -16,4 +16,4 @@ MonoBehaviour:
   voiceClip: {fileID: 8300000, guid: bd91dc045de691b4dba013262e57d2c0, type: 3}
   extraDelay: 0.5
   animationTrigger: isWalking
-  triggerCount: 8
+  triggerCount: 9

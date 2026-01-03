@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1b3db8d0d47d324b9890da89b5c1f45, type: 3}
+  m_Name: Sequence10
+  m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Dialogue.DialogueSequence
+  lines:
+  - {fileID: 11400000, guid: 441190219c5104e4ea6ba930a9684ca7, type: 2}
+  - {fileID: 11400000, guid: 4fc0a50a8aec5e244a02459cdd024d7d, type: 2}
+  - {fileID: 11400000, guid: 7432890260792164d808912a6b71a330, type: 2}
+  - {fileID: 11400000, guid: 9d30160f5c97d9142a1c0acc316334cb, type: 2}
+  - {fileID: 11400000, guid: cf1230a80492d0f448f1511115f50a05, type: 2}
+  - {fileID: 11400000, guid: 897c69d0eb1d289478f78140cc34d353, type: 2}
+  - {fileID: 11400000, guid: 010e8ae86239b16419c48b9e3fea851f, type: 2}
+  - {fileID: 11400000, guid: 73e0968ece909ab49a2d7c0624155fa7, type: 2}
+  - {fileID: 11400000, guid: 3bd7d5845afee95498aefff2ea7c0dc5, type: 2}
+  - {fileID: 11400000, guid: a09091715d1e245409ab0465deadc477, type: 2}
+  - {fileID: 11400000, guid: 3c91f909241347b4e82787c10c5c5d82, type: 2}
+  - {fileID: 11400000, guid: 65ec4a8e06700f645b9da60efab816db, type: 2}
+  talkingBool: WorriedBool
+  moveToPosition: 0
+  waypointName: 
+  moveSpeed: 2
+  talkWhileWalking: 0
+  onStartAction: 0
+  onEndAction: 2
+  advancesStory: 1
+  nextSequence: {fileID: 11400000, guid: 9ab5584bb441d3943be5c5e0c6623e55, type: 2}

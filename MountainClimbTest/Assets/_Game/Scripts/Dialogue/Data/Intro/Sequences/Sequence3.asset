@@ -14,6 +14,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Dialogue.DialogueSequence
   lines:
   - {fileID: 11400000, guid: e4bca555f0e303045bc597a0dd9c7eae, type: 2}
+  - {fileID: 11400000, guid: ed48d732495ce2543b4e021a48da4f71, type: 2}
+  - {fileID: 11400000, guid: 66870d515a2de464593af798e97e8c1c, type: 2}
+  - {fileID: 11400000, guid: 7644651d2104f08478a43ac583c83d3c, type: 2}
+  - {fileID: 11400000, guid: 78b251e55194f8442af78af51eba36f2, type: 2}
+  - {fileID: 11400000, guid: 020749f3ecb02944aa35d25f122922ac, type: 2}
+  - {fileID: 11400000, guid: 5f8aec2a82d6cbd4b8b94fbe39fb1785, type: 2}
+  - {fileID: 11400000, guid: d9f1819a916cd784392898395c406975, type: 2}
+  - {fileID: 11400000, guid: 3cbd5859168a4af46b99d021602ed31e, type: 2}
+  - {fileID: 11400000, guid: 4ec7c4216fd862c4db6c70729a5a0c07, type: 2}
+  - {fileID: 11400000, guid: 8435a612cbb6e834db3e7ba81307e41e, type: 2}
+  - {fileID: 11400000, guid: 0c43212feb44c1c4581b02c04a2b68b0, type: 2}
+  - {fileID: 11400000, guid: 53b328ea4d27b59468d91fb530eadc28, type: 2}
+  - {fileID: 11400000, guid: 376f645fe3f39db4c92c9ce87b845a4b, type: 2}
+  - {fileID: 11400000, guid: 045966d985b305449aade626508bc609, type: 2}
+  - {fileID: 11400000, guid: 8beab629c17c59e4586371a7a6c61eba, type: 2}
+  - {fileID: 11400000, guid: bfafc22514bd48a468025f86b7cb6875, type: 2}
   talkingBool: isTalking
   moveToPosition: 0
   waypointName: 

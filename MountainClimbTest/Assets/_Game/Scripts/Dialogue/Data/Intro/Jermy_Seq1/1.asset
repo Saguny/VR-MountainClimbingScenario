@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Dialogue.DialogueLine
   textContent: Hey, you're finally awake!
   voiceClip: {fileID: 8300000, guid: 1fb5f8295ca149e41abf58c82b8b1c9c, type: 3}
-  extraDelay: 1
+  extraDelay: 0.5
   animationTrigger: isJumping
   triggerCount: 2

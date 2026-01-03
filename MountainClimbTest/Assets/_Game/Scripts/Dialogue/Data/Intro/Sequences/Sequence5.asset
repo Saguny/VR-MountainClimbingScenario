@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1b3db8d0d47d324b9890da89b5c1f45, type: 3}
+  m_Name: Sequence5
+  m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Dialogue.DialogueSequence
+  lines:
+  - {fileID: 11400000, guid: c7c2a93c184fa414fa150935af8befc9, type: 2}
+  - {fileID: 11400000, guid: 24a553712eba13e42956f12b41ca1995, type: 2}
+  - {fileID: 11400000, guid: 61f57899c44b82744a6bfd4c312a2ef6, type: 2}
+  - {fileID: 11400000, guid: 049eaee4917e66a4b8e0e8446e541cc9, type: 2}
+  - {fileID: 11400000, guid: f36bce8c2a6c9fe4f8d09e0b1090a43d, type: 2}
+  - {fileID: 11400000, guid: 644a77e317353794ca67837f874a3823, type: 2}
+  - {fileID: 11400000, guid: 44aae75f3c65dc147ae0f5a0efa0f7c9, type: 2}
+  - {fileID: 11400000, guid: b800c0e21338c6f4e9e561535b3a3fca, type: 2}
+  - {fileID: 11400000, guid: 6d37f64056a172846ab8f02edc608450, type: 2}
+  - {fileID: 11400000, guid: 5b17a6ed93737c34db45d68fd7e5d930, type: 2}
+  - {fileID: 11400000, guid: e8414a02a5af2a84dae7a1510874de5b, type: 2}
+  - {fileID: 11400000, guid: 9e1fae7874db2bb45b2963e2fde87eec, type: 2}
+  - {fileID: 11400000, guid: 49add21735e426d499fd2c41b400cc8b, type: 2}
+  - {fileID: 11400000, guid: a759661d0e1b2e942a4b95f38ce15597, type: 2}
+  - {fileID: 11400000, guid: 18ffab3a8c5962d45abc4bb26db9b59b, type: 2}
+  - {fileID: 11400000, guid: 475027572514b4648adc83a36f40482d, type: 2}
+  - {fileID: 11400000, guid: 7eb38704622a3624e8131f5087ef4d2d, type: 2}
+  - {fileID: 11400000, guid: 349efffbec2744f438ef7011b4c173bc, type: 2}
+  - {fileID: 11400000, guid: 0703be5e8bf965242a74b18a369f430a, type: 2}
+  - {fileID: 11400000, guid: 38afc6774766e82408eabc401f8bacf4, type: 2}
+  - {fileID: 11400000, guid: 4febd2b5b3236fc47bdf1c5a9bacd7ab, type: 2}
+  - {fileID: 11400000, guid: 1fdf2a6e1732bcf49a4ee8c3aaf31a57, type: 2}
+  - {fileID: 11400000, guid: dd5bef52fc4dd984695770ee3a3d9782, type: 2}
+  - {fileID: 11400000, guid: 96d7e9e7f63cd6840b4529459c948d0a, type: 2}
+  - {fileID: 11400000, guid: 580e058585b0b354eb6cf4c092bde409, type: 2}
+  - {fileID: 11400000, guid: f4cd0b235337b7f44be34b3ca1d963b6, type: 2}
+  - {fileID: 11400000, guid: 7611b646e7545b44295f8d45935499da, type: 2}
+  - {fileID: 11400000, guid: dd433f95a99c8c341bfc24414e4770f5, type: 2}
+  - {fileID: 11400000, guid: 960f2b41640b74845b97a96450e98ca8, type: 2}
+  - {fileID: 11400000, guid: c1bb0faecec76044fa3c3e27c9a5065a, type: 2}
+  - {fileID: 11400000, guid: ee7132acf01078847ae05ea26a3f24ae, type: 2}
+  - {fileID: 11400000, guid: 8309d25a90662c844a846fcb7b040c92, type: 2}
+  - {fileID: 11400000, guid: 35c2cd0eb29161c48bd8263637efcda1, type: 2}
+  - {fileID: 11400000, guid: 63ac69f6243fff340afd1e30f2dd4a27, type: 2}
+  - {fileID: 11400000, guid: 47452a6376fedbb4face9921aecc61b7, type: 2}
+  talkingBool: isTalking
+  moveToPosition: 0
+  waypointName: 
+  moveSpeed: 2
+  talkWhileWalking: 0
+  onStartAction: 0
+  onEndAction: 0
+  advancesStory: 1
+  nextSequence: {fileID: 11400000, guid: 3f74d8bb10d1e1241986bcab746316d8, type: 2}
