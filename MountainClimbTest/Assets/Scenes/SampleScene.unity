@@ -5009,6 +5009,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5427935319870618663, guid: 5c7b7000bd88cbd49bd5c26f449cc6c1, type: 3}
+      propertyPath: m_CollisionDetection
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5427935319870618663, guid: 5c7b7000bd88cbd49bd5c26f449cc6c1, type: 3}
       propertyPath: m_ExcludeLayers.m_Bits
       value: 8
       objectReference: {fileID: 0}
@@ -5086,10 +5090,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: XR Origin (XR Rig)
       objectReference: {fileID: 0}
-    - target: {fileID: 260517983619946213, guid: 22b7c01bddccde849a9b08e12bce3ed4, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 260517983619946214, guid: 22b7c01bddccde849a9b08e12bce3ed4, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.144
@@ -5130,14 +5130,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1038219100808116355, guid: 22b7c01bddccde849a9b08e12bce3ed4, type: 3}
-      propertyPath: m_InteractionLayers.m_Bits
-      value: 961
-      objectReference: {fileID: 0}
-    - target: {fileID: 1953679619669106805, guid: 22b7c01bddccde849a9b08e12bce3ed4, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 4816152764940099381, guid: 22b7c01bddccde849a9b08e12bce3ed4, type: 3}
       propertyPath: m_StartingSelectedInteractable
       value: 
@@ -5150,10 +5142,6 @@ PrefabInstance:
       propertyPath: currentTarget
       value: 
       objectReference: {fileID: 1471319559}
-    - target: {fileID: 5079684373459266067, guid: 22b7c01bddccde849a9b08e12bce3ed4, type: 3}
-      propertyPath: seaLevelPressureHPa
-      value: 480
-      objectReference: {fileID: 0}
     - target: {fileID: 5137728507380999164, guid: 22b7c01bddccde849a9b08e12bce3ed4, type: 3}
       propertyPath: m_StartingSelectedInteractable
       value: 

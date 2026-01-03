@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using TMPro;
+using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 namespace MountainRescue.Dialogue
 {
@@ -19,10 +20,13 @@ namespace MountainRescue.Dialogue
         [SerializeField] private string walkingBool = "isWalking";
         [SerializeField] private float delayBetweenLines = 0.5f;
 
+        [Header("XR Player Settings")]
+        [Tooltip("The DynamicMoveProvider script on your XR Origin.")]
+        [SerializeField] private DynamicMoveProvider dynamicMoveProvider;
+
         [Header("Manual Head Tracking (Non-Humanoid)")]
         [Tooltip("Drag the specific bone for the Head here.")]
         [SerializeField] private Transform headBone;
-        [SerializeField] private float lookSpeed = 5f;
         [SerializeField] private float bodyTurnSpeed = 2f;
         [Tooltip("How far can he turn his head before the body follows? (Degrees)")]
         [SerializeField] private float maxHeadAngle = 60f;
@@ -39,7 +43,7 @@ namespace MountainRescue.Dialogue
         private Transform _waypointContainer;
         private Coroutine _activeRoutine;
         private Transform _playerHead;
-        private bool _isWalking = false; // Internal flag to coordinate tracking
+        private bool _isWalking = false;
 
         public delegate void DialogueEvent(string text);
         public event DialogueEvent OnSubtitleUpdated;
@@ -48,14 +52,16 @@ namespace MountainRescue.Dialogue
         {
             GameObject container = GameObject.Find("NPC_Waypoints");
             if (container != null) _waypointContainer = container.transform;
-            if (subtitleTMP != null) subtitleTMP.text = "";
+
+            // UI starts disabled
+            if (subtitleTMP != null) subtitleTMP.gameObject.SetActive(false);
 
             if (Camera.main != null) _playerHead = Camera.main.transform;
         }
 
-        // --- TRACKING LOGIC (LateUpdate runs after Animation) ---
         private void LateUpdate()
         {
+            // Do not look at player if currently walking
             if (headBone == null || _playerHead == null || _isWalking) return;
 
             float dist = Vector3.Distance(transform.position, _playerHead.position);
@@ -74,16 +80,11 @@ namespace MountainRescue.Dialogue
                 transform.rotation = Quaternion.Slerp(transform.rotation, bodyTarget, Time.deltaTime * bodyTurnSpeed);
             }
 
-            // 3. Head Rotation BLENDING (The Magic Fix)
+            // 3. Head Rotation BLENDING
             if (angle < 100f)
             {
-                // A. Where the ANIMATION wants the head to be right now (The "Whip")
                 Quaternion animationRotation = headBone.rotation;
-
-                // B. Where WE want the head to be (The Player)
                 Quaternion targetRotation = Quaternion.LookRotation(dirToPlayer);
-
-                // C. Blend them! 
                 headBone.rotation = Quaternion.Slerp(animationRotation, targetRotation, lookWeight);
             }
         }
@@ -100,17 +101,34 @@ namespace MountainRescue.Dialogue
             _activeRoutine = StartCoroutine(PlaySequenceRoutine(sequence));
         }
 
+        private void SetSubtitleText(string text, bool active)
+        {
+            if (subtitleTMP != null)
+            {
+                subtitleTMP.gameObject.SetActive(active);
+                if (active)
+                {
+                    subtitleTMP.text = text;
+                    subtitleTMP.ForceMeshUpdate();
+                }
+            }
+            OnSubtitleUpdated?.Invoke(text);
+        }
+
+        private void ApplyXRAction(SequenceAction action)
+        {
+            if (action == SequenceAction.None || dynamicMoveProvider == null) return;
+            // Only affect movement, keep turning free
+            dynamicMoveProvider.enabled = (action == SequenceAction.UnlockPlayerMovement);
+        }
+
         private IEnumerator PlaySequenceRoutine(DialogueSequence sequence)
         {
-            if (sequence == null)
-            {
-                Debug.LogError($"[NPC Controller] Triggered with NULL sequence on {gameObject.name}");
-                yield break;
-            }
+            if (sequence == null) yield break;
 
-            Debug.Log($"[NPC Controller] Starting Sequence: {sequence.name}");
+            ApplyXRAction(sequence.onStartAction);
 
-            // 1. Handle Movement
+            // Start Movement
             if (sequence.moveToPosition)
             {
                 if (sequence.talkWhileWalking)
@@ -119,48 +137,67 @@ namespace MountainRescue.Dialogue
                     yield return StartCoroutine(MoveToRoutine(sequence.waypointName, sequence.moveSpeed));
             }
 
-            // 2. Play Dialogue Lines
-            if (sequence.lines == null || sequence.lines.Count == 0)
-                Debug.LogWarning($"[NPC Controller] Sequence {sequence.name} has NO dialogue lines!");
+            // Start sequence-wide talking animation
+            if (!string.IsNullOrEmpty(sequence.talkingBool))
+                npcAnimator.SetBool(sequence.talkingBool, true);
 
             foreach (var line in sequence.lines)
             {
-                // Animation
-                if (npcAnimator != null && !string.IsNullOrEmpty(line.animationTrigger))
-                    npcAnimator.SetTrigger(line.animationTrigger);
+                SetSubtitleText(line.textContent, true);
 
-                // UI Event
-                OnSubtitleUpdated?.Invoke(line.textContent);
-
-                // Audio
                 if (speechSource != null && line.voiceClip != null)
                 {
                     speechSource.Stop();
                     speechSource.PlayOneShot(line.voiceClip);
                 }
 
-                yield return new WaitForSeconds(line.displayDuration);
-                OnSubtitleUpdated?.Invoke("");
+                // Line Triggers (Gestures)
+                if (!string.IsNullOrEmpty(line.animationTrigger))
+                {
+                    if (!string.IsNullOrEmpty(sequence.talkingBool))
+                        npcAnimator.SetBool(sequence.talkingBool, false);
+
+                    yield return StartCoroutine(LineTriggerRoutine(line.animationTrigger, line.triggerCount));
+
+                    if (!string.IsNullOrEmpty(sequence.talkingBool))
+                        npcAnimator.SetBool(sequence.talkingBool, true);
+                }
+
+                // Wait for dynamic duration (Audio + Extra Delay)
+                yield return new WaitForSeconds(line.GetTotalDuration());
+
+                SetSubtitleText("", false);
                 yield return new WaitForSeconds(delayBetweenLines);
             }
 
-            Debug.Log($"[NPC Controller] Sequence {sequence.name} Finished.");
+            // Stop speaking loop
+            if (!string.IsNullOrEmpty(sequence.talkingBool))
+                npcAnimator.SetBool(sequence.talkingBool, false);
 
-            // 3. Advance Story Stage (NEW LOGIC)
-            if (sequence.advancesStory)
+            // SYNC FIX: Wait for physical movement to finish before closing the routine
+            while (_isWalking)
             {
-                CurrentStoryStage++;
-                Debug.Log($"[Story] Stage Advanced to: {CurrentStoryStage}");
+                yield return null;
             }
 
-            // 4. Chaining
+            if (sequence.advancesStory) CurrentStoryStage++;
+            ApplyXRAction(sequence.onEndAction);
+
             if (sequence.nextSequence != null)
-            {
                 yield return StartCoroutine(PlaySequenceRoutine(sequence.nextSequence));
-            }
             else
             {
+                SetSubtitleText("", false);
                 _activeRoutine = null;
+            }
+        }
+
+        private IEnumerator LineTriggerRoutine(string trigger, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                npcAnimator.SetTrigger(trigger);
+                yield return new WaitForSeconds(0.5f);
             }
         }
 
@@ -168,54 +205,38 @@ namespace MountainRescue.Dialogue
         {
             if (_waypointContainer == null) yield break;
             Transform target = _waypointContainer.Find(waypointName);
-
-            if (target == null)
-            {
-                Debug.LogError($"[NPC] Could not find waypoint: {waypointName}");
-                yield break;
-            }
+            if (target == null) yield break;
 
             CharacterController characterController = GetComponent<CharacterController>();
-
-            // Enable Walking State (Disables Head Tracking)
             _isWalking = true;
             npcAnimator.SetBool(walkingBool, true);
 
-            float timeOut = 10f;
-            float timer = 0f;
 
-            while (Vector3.Distance(transform.position, target.position) > 0.3f)
+            // Precision distance check
+            while (Vector3.Distance(transform.position, target.position) > 0.15f)
             {
-                timer += Time.deltaTime;
-                if (timer > timeOut) break;
-
-                // --- SMOOTH ROTATION FIX ---
                 Vector3 direction = (target.position - transform.position).normalized;
-                direction.y = 0; // Keep it flat
+                direction.y = 0;
 
                 if (direction != Vector3.zero)
                 {
                     Quaternion targetRot = Quaternion.LookRotation(direction);
-                    // Smoothly rotate body towards waypoint
                     transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * 5f);
                 }
-                // ---------------------------
 
-                // MOVEMENT
                 if (characterController != null && characterController.enabled)
-                {
-                    Vector3 moveDir = (target.position - transform.position).normalized;
-                    characterController.Move(moveDir * speed * Time.deltaTime);
-                }
+                    characterController.Move(direction * speed * Time.deltaTime);
                 else
-                {
                     transform.position = Vector3.MoveTowards(transform.position, target.position, speed * Time.deltaTime);
-                }
 
                 yield return null;
             }
 
-            // Disable Walking State (Re-enables Head Tracking)
+
+            // Snap to final and wait a tiny buffer for animator to catch up
+            transform.position = new Vector3(target.position.x, transform.position.y, target.position.z);
+            yield return new WaitForSeconds(0.1f);
+
             npcAnimator.SetBool(walkingBool, false);
             _isWalking = false;
         }

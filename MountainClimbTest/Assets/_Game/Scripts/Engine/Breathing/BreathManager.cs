@@ -15,6 +15,7 @@ namespace MountainRescue.Systems
         public float maxStamina = 100f;
         public float currentStamina;
         public float lowStaminaThreshold = 25f;
+        public float penaltyHeight = 50f;
 
         [Header("Costs & Regeneration")]
         public float baseGrabCost = 2f;
@@ -150,8 +151,8 @@ namespace MountainRescue.Systems
             if (sensorSuite == null) return true;
 
             float hPa = sensorSuite.GetPressureHPa();
-            float pressureDrop = 1013.25f - hPa;
-            float penalty = Mathf.FloorToInt(Mathf.Max(0, pressureDrop) / 20f);
+            float pressureDrop = 700 - hPa;
+            float penalty = Mathf.FloorToInt(Mathf.Max(0, pressureDrop) / penaltyHeight);
             float totalCost = baseGrabCost + penalty;
 
             if (currentStamina >= totalCost)

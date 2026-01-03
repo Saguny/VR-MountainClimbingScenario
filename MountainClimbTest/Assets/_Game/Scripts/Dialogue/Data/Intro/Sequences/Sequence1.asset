@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1b3db8d0d47d324b9890da89b5c1f45, type: 3}
+  m_Name: Sequence1
+  m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Dialogue.DialogueSequence
+  lines:
+  - {fileID: 11400000, guid: 880f694e8faed8f42bc08a84ce02270b, type: 2}
+  - {fileID: 11400000, guid: 53e9b57a6e7230d4892c2ab456b46620, type: 2}
+  - {fileID: 11400000, guid: 5f68c8356dc637f4189e54bc551be81a, type: 2}
+  talkingBool: isTalking
+  moveToPosition: 0
+  waypointName: 
+  moveSpeed: 2
+  talkWhileWalking: 0
+  onStartAction: 0
+  onEndAction: 0
+  advancesStory: 0
+  nextSequence: {fileID: 11400000, guid: c55607e8b3f66244b867412f5f0535f3, type: 2}
