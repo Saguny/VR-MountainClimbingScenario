@@ -10,6 +10,7 @@ TagManager:
   - SlipperyStone
   - Snow
   - Stone
+  - RescueTarget
   layers:
   - Default
   - TransparentFX

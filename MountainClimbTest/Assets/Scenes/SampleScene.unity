@@ -921,9 +921,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Systems.BreathManager
   sensorSuite: {fileID: 249757934}
   moveProvider: {fileID: 2093322021}
+  masterMixer: {fileID: 0}
+  mixerParameterName: AmbienceLowPass
+  minCutoff: 500
+  maxCutoff: 22000
   maxStamina: 100
   currentStamina: 0
   lowStaminaThreshold: 25
+  penaltyHeight: 50
   baseGrabCost: 2
   focusRegenRate: 5
   idleHangRegenRate: 1
@@ -3053,7 +3058,7 @@ MonoBehaviour:
   rightController: {fileID: 0}
   playerCamera: {fileID: 335926730}
   characterController: {fileID: 739727062}
-  interactionManager: {fileID: 1805907087}
+  interactionManager: {fileID: 0}
 --- !u!114 &1484439637
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3722,65 +3727,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
   m_Asset: {fileID: -944628639613478452, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   m_ActionId: 9fb2eb2b-2fb6-4328-8167-10a1bf11b424
---- !u!1 &1805907086
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1805907088}
-  - component: {fileID: 1805907087}
-  - component: {fileID: 1805907089}
-  m_Layer: 0
-  m_Name: XR Interaction Manager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1805907087
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1805907086}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 83e4e6cca11330d4088d729ab4fc9d9f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.XR.Interaction.Toolkit::UnityEngine.XR.Interaction.Toolkit.XRInteractionManager
-  m_StartingHoverFilters: []
-  m_StartingSelectFilters: []
---- !u!4 &1805907088
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1805907086}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1805907089
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1805907086}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0a0abde596e908046939b6545d1b22de, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::StaminaSelectFilter
 --- !u!1 &1869686494
 GameObject:
   m_ObjectHideFlags: 0
@@ -5251,7 +5197,6 @@ SceneRoots:
   m_Roots:
   - {fileID: 410087041}
   - {fileID: 832575519}
-  - {fileID: 1805907088}
   - {fileID: 6534720820461639859}
   - {fileID: 1928268385}
   - {fileID: 650960997}
