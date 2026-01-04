@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit.Locomotion;
+using UnityEngine.Audio;
 using System.Collections;
 
 namespace MountainRescue.Systems
@@ -10,6 +11,12 @@ namespace MountainRescue.Systems
         [Header("Dependencies")]
         public PlayerSensorSuite sensorSuite;
         public LocomotionProvider moveProvider;
+
+        [Header("Audio Integration")]
+        [SerializeField] private AudioMixer masterMixer;
+        [SerializeField] private string mixerParameterName = "AmbienceLowPass";
+        [SerializeField] private float minCutoff = 500f;
+        [SerializeField] private float maxCutoff = 22000f;
 
         [Header("Stamina Settings")]
         public float maxStamina = 100f;
@@ -69,6 +76,7 @@ namespace MountainRescue.Systems
             HandlePassiveDrain(currentHPa);
             HandleRegeneration(currentHPa);
             CheckThinAirThreshold(currentHPa);
+            UpdateAmbienceEffects();
 
             _logTimer += Time.deltaTime;
             if (_logTimer >= 1.0f)
@@ -76,6 +84,23 @@ namespace MountainRescue.Systems
                 string zone = (currentHPa < thinAirThreshold) ? "<color=red>THIN AIR</color>" : "<color=cyan>NORMAL</color>";
                 Debug.Log($"<color=white>[STAMINA]</color> {currentStamina:F1}/{maxStamina} | {zone} | Pressure: {currentHPa:F0}hPa");
                 _logTimer = 0;
+            }
+        }
+
+        private void UpdateAmbienceEffects()
+        {
+            float staminaPercent = currentStamina / maxStamina;
+
+            if (masterMixer != null)
+            {
+                float targetCutoff = Mathf.Lerp(minCutoff, maxCutoff, staminaPercent);
+                masterMixer.SetFloat(mixerParameterName, targetCutoff);
+            }
+
+            if (MountainRescue.Engine.AmbienceManager.Instance != null)
+            {
+                float targetVolume = Mathf.Lerp(0.3f, 1.0f, staminaPercent);
+                MountainRescue.Engine.AmbienceManager.Instance.SetAmbienceVolume(targetVolume);
             }
         }
 

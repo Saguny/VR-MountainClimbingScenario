@@ -8,6 +8,8 @@ TagManager:
   - climbableObjects
   - Anchor
   - SlipperyStone
+  - Snow
+  - Stone
   layers:
   - Default
   - TransparentFX
@@ -18,7 +20,7 @@ TagManager:
   - climbableObjects
   - Subtitles
   - Utils
-  - 
+  - Ground
   - 
   - 
   - 
