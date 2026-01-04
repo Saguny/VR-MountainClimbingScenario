@@ -17,13 +17,13 @@ namespace MountainRescue.Engine
             if (other.GetComponent<CharacterController>() != null)
             {
                 // Prüfen ob die aktuelle Stage passt
-                if (DynamicSceneSwitcher.Instance.GetCurrentStoryStage() >= requiredStoryStage)
+                if (SceneSwitcher.Instance.GetCurrentStoryStage() >= requiredStoryStage)
                 {
-                    DynamicSceneSwitcher.Instance.SwitchScene(targetScene, targetSpawnPointName);
+                    SceneSwitcher.Instance.SwitchScene(targetScene, targetSpawnPointName);
                 }
                 else
                 {
-                    Debug.Log($"Szenenwechsel blockiert: Benötige Stage {requiredStoryStage}, aktuell ist {DynamicSceneSwitcher.Instance.GetCurrentStoryStage()}");
+                    Debug.Log($"Szenenwechsel blockiert: Benötige Stage {requiredStoryStage}, aktuell ist {SceneSwitcher.Instance.GetCurrentStoryStage()}");
                 }
             }
         }

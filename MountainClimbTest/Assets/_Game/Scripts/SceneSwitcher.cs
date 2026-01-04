@@ -9,10 +9,9 @@ using UnityEngine.XR.Interaction.Toolkit.Locomotion;
 
 namespace MountainRescue.Engine
 {
-    public class DynamicSceneSwitcher : MonoBehaviour
+    public class SceneSwitcher : MonoBehaviour
     {
-        public static DynamicSceneSwitcher Instance;
-        public static event System.Action<CharacterController> OnCharacterControllerRebuilt;
+        public static SceneSwitcher Instance;
 
         [Header("references")]
         [SerializeField] private HeadsetFader fader;
@@ -29,9 +28,14 @@ namespace MountainRescue.Engine
         private void Awake()
         {
             if (Instance == null)
+            {
                 Instance = this;
+                DontDestroyOnLoad(gameObject);
+            }
             else
+            {
                 Destroy(gameObject);
+            }
         }
 
         public int GetCurrentStoryStage()
@@ -46,29 +50,33 @@ namespace MountainRescue.Engine
 
         private IEnumerator LoadSceneRoutine(string sceneName, string spawnPointName)
         {
+            // 1. Fade Out
             if (fader != null)
                 yield return StartCoroutine(fader.FadeOut());
 
+            // UI Cleanup
             if (subtitleText != null)
             {
                 subtitleText.text = string.Empty;
                 subtitleText.gameObject.SetActive(false);
             }
 
+            // 2. Szene laden
             AsyncOperation op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
             while (!op.isDone)
                 yield return null;
 
-            yield return new WaitForFixedUpdate();
+            // Warten bis alles initialisiert ist
             yield return new WaitForFixedUpdate();
 
+            // 3. Terrain Fix
             TerrainPhysicsFix();
 
+            // 4. Spieler positionieren (WICHTIG: CC kurz aus, sonst glitched es)
             PositionPlayer(spawnPointName);
             Physics.SyncTransforms();
 
-            yield return StartCoroutine(RebuildCharacterController());
-
+            // 5. Komponenten resetten (damit sie die neue Umgebung checken)
             if (bodyTransformer != null)
             {
                 bodyTransformer.enabled = false;
@@ -83,35 +91,9 @@ namespace MountainRescue.Engine
                 dynamicMoveProvider.enabled = true;
             }
 
+            // 6. Fade In
             if (fader != null)
                 yield return StartCoroutine(fader.FadeIn());
-        }
-
-        private IEnumerator RebuildCharacterController()
-        {
-            CharacterController oldCC = xrOrigin.GetComponent<CharacterController>();
-            if (oldCC == null)
-                yield break;
-
-            float height = oldCC.height;
-            Vector3 center = oldCC.center;
-            float radius = oldCC.radius;
-            float stepOffset = oldCC.stepOffset;
-            float slopeLimit = oldCC.slopeLimit;
-
-            Destroy(oldCC);
-
-            yield return null;
-            yield return new WaitForFixedUpdate();
-
-            CharacterController newCC = xrOrigin.AddComponent<CharacterController>();
-            newCC.height = height;
-            newCC.center = center;
-            newCC.radius = radius;
-            newCC.stepOffset = stepOffset;
-            newCC.slopeLimit = slopeLimit;
-
-            OnCharacterControllerRebuilt?.Invoke(newCC);
         }
 
         private void TerrainPhysicsFix()
@@ -130,8 +112,15 @@ namespace MountainRescue.Engine
             GameObject spawnPoint = GameObject.Find(spawnPointName);
             if (spawnPoint != null && xrOrigin != null)
             {
+                CharacterController cc = xrOrigin.GetComponent<CharacterController>();
+
+                // CC muss deaktiviert sein für harten Teleport
+                if (cc != null) cc.enabled = false;
+
                 xrOrigin.transform.position = spawnPoint.transform.position + Vector3.up * 0.1f;
                 xrOrigin.transform.rotation = spawnPoint.transform.rotation;
+
+                if (cc != null) cc.enabled = true;
             }
         }
     }

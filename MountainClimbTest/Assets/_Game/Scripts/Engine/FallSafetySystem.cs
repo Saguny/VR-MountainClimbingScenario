@@ -28,15 +28,7 @@ namespace MountainRescue.Systems.Safety
         private bool _isAirborne;
         private bool _isConsequenceActive;
 
-        private void OnEnable()
-        {
-            DynamicSceneSwitcher.OnCharacterControllerRebuilt += SetCharacterController;
-        }
-
-        private void OnDisable()
-        {
-            DynamicSceneSwitcher.OnCharacterControllerRebuilt -= SetCharacterController;
-        }
+        
 
         private void Start()
         {

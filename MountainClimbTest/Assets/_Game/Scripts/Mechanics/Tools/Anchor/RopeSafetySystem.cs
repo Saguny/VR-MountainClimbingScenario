@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
-using MountainRescue.Engine; // Added to access DynamicSceneSwitcher
+using MountainRescue.Engine;
 
 [RequireComponent(typeof(LineRenderer))]
 public class RopeSafetySystem : MonoBehaviour
@@ -46,8 +46,7 @@ public class RopeSafetySystem : MonoBehaviour
         if (detachInput.action != null) detachInput.action.Enable();
 
         SceneManager.sceneLoaded += OnSceneLoaded;
-        // Subscribe to the rebuild event from your DynamicSceneSwitcher
-        DynamicSceneSwitcher.OnCharacterControllerRebuilt += HandleCCRebuilt;
+        
     }
 
     void OnDisable()
@@ -55,7 +54,7 @@ public class RopeSafetySystem : MonoBehaviour
         if (detachInput.action != null) detachInput.action.Disable();
 
         SceneManager.sceneLoaded -= OnSceneLoaded;
-        DynamicSceneSwitcher.OnCharacterControllerRebuilt -= HandleCCRebuilt;
+        
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
