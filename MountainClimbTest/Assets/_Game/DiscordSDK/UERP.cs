@@ -8,8 +8,6 @@ using Discord;
 using Debug = UnityEngine.Debug;
 using System.Diagnostics;
 
-// With help of MarshMello0's code : https://github.com/MarshMello0/Editor-Rich-Presence
-
 [InitializeOnLoad]
 public static class UERP
 {
