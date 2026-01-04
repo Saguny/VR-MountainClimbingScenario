@@ -1,168 +1,141 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
-using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using MountainRescue.Interfaces;
 
 [RequireComponent(typeof(LineRenderer))]
-[RequireComponent(typeof(XRGrabInteractable))]
-[RequireComponent(typeof(Rigidbody))]
 public class AnchorHook : MonoBehaviour, IAnchorStateProvider
 {
     [Header("Settings")]
-    [Tooltip("Tag of the wall objects where the anchor can stick.")]
-    public string climbableTag = "Climbable"; // Can also use "Anchor" tag if you prefer
-
-    [Tooltip("Max rope length before physics pulls you back.")]
+    public string climbableTag = "climbableObjects";
     public float maxFallDistance = 3.0f;
+    public float maxClimbHeight = 0.5f; // Begrenzung nach oben
+    public float platformSize = 2.0f;
+    public float centeringSpeed = 2.0f;
 
-    [Tooltip("Radius around the anchor point where the player can move freely.")]
-    public float wallRadius = 0.8f;
-
-    [Tooltip("How close the hook needs to be to attach.")]
-    public float reachThreshold = 0.6f;
+    [Header("Advanced Boundary")]
+    public float deadzoneRadius = 0.2f;
+    public float hardLimitRadius = 0.9f;
 
     [Header("Input")]
     public InputActionProperty detachInput;
 
-    [Header("Mandatory Assignments")]
-    public Transform leftController;
-    public Transform rightController;
+    [Header("Assignments")]
     public Transform playerCamera;
     public CharacterController characterController;
-    public XRInteractionManager interactionManager;
 
     private LineRenderer line;
-    private XRGrabInteractable interactable;
-    private Rigidbody rb;
     private bool isStuck = false;
-    private Vector3 lastValidPlayerPos;
     private Vector3 anchorPosition;
+    private GameObject catchPlatform;
 
-    // --- INTERFACE IMPLEMENTATION ---
-    public bool IsAnchored()
-    {
-        // The player is safe if the hook is physically stuck in the wall.
-        return isStuck;
-    }
-    // --------------------------------
+    public bool IsAnchored() => isStuck;
 
     void Awake()
     {
         line = GetComponent<LineRenderer>();
-        interactable = GetComponent<XRGrabInteractable>();
-        rb = GetComponent<Rigidbody>();
+        if (!playerCamera) playerCamera = Camera.main.transform;
 
-        if (!playerCamera && Camera.main != null)
-            playerCamera = Camera.main.transform;
-
-        // Initialize Line Renderer
+        // LineRenderer Grund-Setup
         line.enabled = false;
         line.positionCount = 2;
-        line.startWidth = 0.02f;
-        line.endWidth = 0.02f;
+
+        CreateCatchPlatform();
     }
 
-    void OnEnable()
+    void CreateCatchPlatform()
     {
-        // Optional: Subscribe to select events if needed for logic
+        catchPlatform = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        catchPlatform.name = "SafetyPlatform";
+        catchPlatform.transform.localScale = new Vector3(platformSize, 0.5f, platformSize);
+        catchPlatform.GetComponent<MeshRenderer>().enabled = false;
+        catchPlatform.SetActive(false);
     }
 
-    void OnCollisionEnter(Collision col)
-    {
-        // Only stick if not already stuck and hitting a valid anchor surface
-        if (isStuck) return;
-
-        // Check for specific tag (e.g., "Anchor" or "Climbable")
-        if (col.gameObject.CompareTag("Anchor") || col.gameObject.CompareTag(climbableTag))
-        {
-            Stick(col.contacts[0].point);
-        }
-    }
-
-    void Stick(Vector3 point)
+    // WICHTIG: Diese Methode wird vom AnchorProjectile-Script aufgerufen!
+    public void RegisterNewAnchor(Vector3 hitPoint)
     {
         isStuck = true;
-
-        // Physics: Lock in place
-        rb.isKinematic = true;
-        rb.useGravity = false;
-
-        // Visuals: Snap to point
-        transform.position = point;
-        anchorPosition = point; // Store the exact hit point
-
-        // Logic: Force drop from hand so it stays on wall
-        if (interactionManager != null && interactable.isSelected)
-        {
-            // Note: In XRI 3.x this syntax might vary slightly, but this is standard
-            interactionManager.SelectExit(interactable.interactorsSelecting[0], interactable);
-        }
-
-        // Disable interaction so you can't grab it while it's holding you (optional choice)
-        interactable.enabled = false;
-
-        // Turn on the rope visual
+        anchorPosition = hitPoint;
         line.enabled = true;
-    }
 
-    void Unstick()
-    {
-        isStuck = false;
-
-        // Physics: Release
-        rb.isKinematic = false;
-        rb.useGravity = true;
-
-        // Interaction: Re-enable
-        interactable.enabled = true;
-
-        // Visuals: Hide rope
-        line.enabled = false;
+        // Plattform positionieren
+        float targetY = anchorPosition.y - maxFallDistance - 0.25f;
+        catchPlatform.transform.position = new Vector3(anchorPosition.x, targetY, anchorPosition.z);
+        catchPlatform.SetActive(true);
     }
 
     void Update()
     {
         if (!isStuck) return;
 
-        // --- SAFETY ROPE LOGIC ---
-        // 1. Calculate rope length
-        float dist = Vector3.Distance(playerCamera.position, anchorPosition);
-
-        // 2. Physics Correction (Prevent falling too far)
-        // If player goes beyond max length, pull them back (rudimentary physics)
-        if (dist > maxFallDistance)
+        // 1. Manueller Abbruch
+        if (detachInput.action != null && detachInput.action.WasPressedThisFrame())
         {
-            Vector3 direction = (playerCamera.position - anchorPosition).normalized;
-            Vector3 clampedPos = anchorPosition + direction * maxFallDistance;
-
-            // Move CC to the clamped position (ignoring Y if you want to swing, but this is a hard stop)
-            Vector3 correction = clampedPos - playerCamera.position;
-
-            // Apply immediately to stop the fall
-            characterController.Move(correction);
+            Unstick();
+            return;
         }
 
-        // 3. Wall Hugging Logic (Prevent swinging out too far from wall)
-        // Check distance on XZ plane only
-        Vector3 flatPlayerPos = new Vector3(playerCamera.position.x, 0, playerCamera.position.z);
-        Vector3 flatAnchorPos = new Vector3(anchorPosition.x, 0, anchorPosition.z);
-        float horizontalDist = Vector3.Distance(flatPlayerPos, flatAnchorPos);
-        Vector3 wallCorrection = Vector3.zero;
+        // 2. Höhenbegrenzung (Verhindert zu weites Aufsteigen über den Anker)
+        ApplyHeightLimit();
 
-        if (horizontalDist > wallRadius)
+        // 3. Zentrierung (Falls wir auf der Plattform stehen/hängen)
+        float playerFeetY = characterController.transform.position.y;
+        float platformTopY = catchPlatform.transform.position.y + 0.25f;
+
+        if (playerFeetY <= platformTopY + 0.2f) // Etwas mehr Toleranz (0.2m)
         {
-            Vector3 dir = (flatPlayerPos - flatAnchorPos).normalized;
-            Vector3 targetPos = flatAnchorPos + dir * wallRadius;
-            wallCorrection.x = targetPos.x - flatPlayerPos.x;
-            wallCorrection.z = targetPos.z - flatPlayerPos.z;
+            ApplyCentering();
+        }
+    }
+
+    void ApplyHeightLimit()
+    {
+        float currentHeight = playerCamera.position.y;
+        float heightLimit = anchorPosition.y + maxClimbHeight;
+
+        if (currentHeight > heightLimit)
+        {
+            float overshoot = currentHeight - heightLimit;
+            characterController.Move(Vector3.down * overshoot);
+        }
+    }
+
+    void ApplyCentering()
+    {
+        // 1. Positionen auf der XZ-Ebene (Horizontal)
+        Vector3 playerPos = characterController.transform.position;
+        Vector3 playerXZ = new Vector3(playerPos.x, 0, playerPos.z);
+        Vector3 centerXZ = new Vector3(anchorPosition.x, 0, anchorPosition.z);
+
+        float currentDist = Vector3.Distance(playerXZ, centerXZ);
+        Vector3 directionToCenter = (centerXZ - playerXZ).normalized;
+
+        // 2. Sicherheits-Check: Wenn der Spieler bereits ÜBER dem Limit ist (z.B. durch schnelles Laufen)
+        // Dann teleportieren wir ihn hart zurück auf die Kante, bevor wir Move aufrufen.
+        if (currentDist > hardLimitRadius)
+        {
+            Vector3 clampedXZ = centerXZ - (directionToCenter * hardLimitRadius);
+            Vector3 newPos = new Vector3(clampedXZ.x, playerPos.y, clampedXZ.z);
+
+            // Der entscheidende Trick: Wir setzen die Position kurz vor dem Move hart fest
+            characterController.enabled = false;
+            characterController.transform.position = newPos;
+            characterController.enabled = true;
+            return; // Frame beenden, da wir schon am Limit sind
         }
 
-        // Apply Wall Correction
-        if (wallCorrection.magnitude > 0.01f)
+        // 3. Normale Zentrierung innerhalb des Spielraums
+        if (currentDist <= deadzoneRadius) return;
+
+        float t = Mathf.InverseLerp(deadzoneRadius, hardLimitRadius, currentDist);
+        // Erhöhter Exponent (3) für steilere Kraftkurve am Rand
+        float strength = Mathf.Pow(t, 3) * centeringSpeed;
+
+        // 4. Progressive Kraft anwenden
+        if (strength > 0)
         {
-            characterController.Move(wallCorrection);
+            characterController.Move(directionToCenter * strength * Time.deltaTime);
         }
     }
 
@@ -170,27 +143,14 @@ public class AnchorHook : MonoBehaviour, IAnchorStateProvider
     {
         if (!isStuck) return;
 
-        // Visuals: Draw the rope from Hook to Player Harness (Camera - Offset)
         line.SetPosition(0, anchorPosition);
-        line.SetPosition(1, playerCamera.position - Vector3.up * 0.4f); // Approx chest height
+        line.SetPosition(1, playerCamera.position - Vector3.up * 0.4f);
+    }
 
-        // Color Logic: Green if safe/near, Red if stretching limit
-        float dist = Vector3.Distance(playerCamera.position, anchorPosition);
-        if (dist < maxFallDistance * 0.8f)
-        {
-            line.startColor = Color.green;
-            line.endColor = Color.green;
-        }
-        else
-        {
-            line.startColor = Color.yellow;
-            line.endColor = Color.red;
-        }
-
-        // Input: Manual Detach
-        if (detachInput.action != null && detachInput.action.WasPressedThisFrame())
-        {
-            Unstick();
-        }
+    public void Unstick()
+    {
+        isStuck = false;
+        line.enabled = false;
+        catchPlatform.SetActive(false);
     }
 }

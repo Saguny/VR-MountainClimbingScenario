@@ -919,6 +919,18 @@ MonoBehaviour:
   gaugeNeedle: {fileID: 1346986585065469667}
   warningDisplay: {fileID: 0}
   handAnimator: {fileID: 0}
+  useTankAction:
+    m_UseReference: 0
+    m_Action:
+      m_Name: Use Tank
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 1a0cb817-f54d-4eef-9c08-0c819a46ee74
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 0}
   currentTankFuel: 100
   usageCost: 2
   emptyTankMessage: Tank is empty... I ran out of Air...
