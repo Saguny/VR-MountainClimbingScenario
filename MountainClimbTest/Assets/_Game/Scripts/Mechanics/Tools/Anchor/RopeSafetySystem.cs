@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
+using MountainRescue.Engine; // Added to access DynamicSceneSwitcher
 
 [RequireComponent(typeof(LineRenderer))]
-[RequireComponent(typeof(CharacterController))]
 public class RopeSafetySystem : MonoBehaviour
 {
     [Header("Rope Settings")]
@@ -18,38 +19,75 @@ public class RopeSafetySystem : MonoBehaviour
     public Color slackColor = Color.white;
     public Color tensionColor = Color.red;
 
-    [Header("References")]
+    [Header("References (Auto-Found)")]
     public DynamicMoveProvider moveProvider;
+    public CharacterController characterController;
 
     private LineRenderer lineRenderer;
-    private CharacterController characterController;
     private bool isHanging = false;
-    private float defaultMoveSpeed;
+    private float defaultMoveSpeed = 2.0f;
 
     void Awake()
     {
         lineRenderer = GetComponent<LineRenderer>();
-        characterController = GetComponent<CharacterController>();
-
         lineRenderer.positionCount = 2;
         lineRenderer.useWorldSpace = true;
         lineRenderer.enabled = false;
-        lineRenderer.material = new Material(Shader.Find("Sprites/Default")); // Simple visual fix
 
-        if (moveProvider == null)
-            moveProvider = FindFirstObjectByType<DynamicMoveProvider>();
+        // Ensure we have a material
+        if (lineRenderer.sharedMaterial == null)
+            lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
 
-        if (harnessPoint == null) harnessPoint = transform;
+        FindPlayerReferences();
     }
 
     void OnEnable()
     {
         if (detachInput.action != null) detachInput.action.Enable();
+
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        // Subscribe to the rebuild event from your DynamicSceneSwitcher
+        DynamicSceneSwitcher.OnCharacterControllerRebuilt += HandleCCRebuilt;
     }
 
     void OnDisable()
     {
         if (detachInput.action != null) detachInput.action.Disable();
+
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        DynamicSceneSwitcher.OnCharacterControllerRebuilt -= HandleCCRebuilt;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        DetachRope();
+        FindPlayerReferences();
+    }
+
+    // This handles the specific moment DynamicSceneSwitcher finishes rebuilding the player
+    private void HandleCCRebuilt(CharacterController newCC)
+    {
+        characterController = newCC;
+        harnessPoint = newCC.transform;
+
+        // Refresh move provider as it might have been reset/re-enabled
+        moveProvider = FindFirstObjectByType<DynamicMoveProvider>();
+
+        Debug.Log("RopeSystem: References updated via Rebuild Event.");
+    }
+
+    private void FindPlayerReferences()
+    {
+        if (characterController == null)
+            characterController = FindFirstObjectByType<CharacterController>();
+
+        if (moveProvider == null)
+            moveProvider = FindFirstObjectByType<DynamicMoveProvider>();
+
+        if (harnessPoint == null && characterController != null)
+        {
+            harnessPoint = characterController.transform;
+        }
     }
 
     void Update()
@@ -59,12 +97,11 @@ public class RopeSafetySystem : MonoBehaviour
             DetachRope();
         }
 
-        if (ropeAnchor != null)
+        if (ropeAnchor != null && harnessPoint != null)
         {
             lineRenderer.SetPosition(0, ropeAnchor.position);
             lineRenderer.SetPosition(1, harnessPoint.position);
 
-            // Visual Feedback: Rot wenn gespannt, Weiss wenn locker
             float currentDist = Vector3.Distance(harnessPoint.position, ropeAnchor.position);
             Color targetColor = (currentDist >= maxRopeLength - 0.1f) ? tensionColor : slackColor;
             lineRenderer.startColor = targetColor;
@@ -74,6 +111,13 @@ public class RopeSafetySystem : MonoBehaviour
 
     void LateUpdate()
     {
+        // CRITICAL: If the CC is null or disabled, DO NOT run any rope logic.
+        // This prevents the rope from trying to teleport a player that is currently being "rebuilt".
+        if (characterController == null || !characterController.enabled)
+        {
+            return;
+        }
+
         if (ropeAnchor != null)
         {
             EnforceRopePhysics();
@@ -86,6 +130,8 @@ public class RopeSafetySystem : MonoBehaviour
 
     public void ConnectRope(Transform anchor)
     {
+        if (characterController == null) FindPlayerReferences();
+
         ropeAnchor = anchor;
         lineRenderer.enabled = true;
     }
@@ -99,10 +145,11 @@ public class RopeSafetySystem : MonoBehaviour
 
     private void EnforceRopePhysics()
     {
+        if (harnessPoint == null || characterController == null) return;
+
         Vector3 vectorToAnchor = harnessPoint.position - ropeAnchor.position;
         float currentDist = vectorToAnchor.magnitude;
 
-        // Wenn Seil gespannt ist (Max Height oder Max Fall erreicht)
         if (currentDist > maxRopeLength)
         {
             if (!isHanging) StartHanging();
@@ -110,13 +157,17 @@ public class RopeSafetySystem : MonoBehaviour
             Vector3 direction = vectorToAnchor.normalized;
             Vector3 targetHarnessPos = ropeAnchor.position + (direction * maxRopeLength);
 
-            Vector3 harnessToRoot = transform.position - harnessPoint.position;
+            Transform rigTransform = characterController.transform;
+            Vector3 harnessToRoot = rigTransform.position - harnessPoint.position;
             Vector3 newRootPos = targetHarnessPos + harnessToRoot;
 
-            // Hartes Limit anwenden
-            characterController.enabled = false;
-            transform.position = newRootPos;
-            characterController.enabled = true;
+            // Simple check to prevent teleporting if CC was just destroyed
+            if (characterController != null)
+            {
+                characterController.enabled = false;
+                rigTransform.position = newRootPos;
+                characterController.enabled = true;
+            }
         }
         else
         {
@@ -130,15 +181,12 @@ public class RopeSafetySystem : MonoBehaviour
 
         if (moveProvider != null)
         {
-            defaultMoveSpeed = moveProvider.moveSpeed;
+            if (moveProvider.moveSpeed > 0) defaultMoveSpeed = moveProvider.moveSpeed;
             moveProvider.moveSpeed = 0;
             moveProvider.useGravity = false;
         }
 
-        // Optional: Hände lösen bei extremem Ruck, 
-        // aber beim Klettern am Limit ist es besser, dies auskommentiert zu lassen,
-        // damit man sich nicht versehentlich loslässt, wenn man das Limit nur berührt.
-        // ForceReleaseHands(); 
+        ForceReleaseHands();
     }
 
     private void StopHanging()
@@ -147,18 +195,24 @@ public class RopeSafetySystem : MonoBehaviour
 
         if (moveProvider != null)
         {
-            moveProvider.moveSpeed = (defaultMoveSpeed > 0) ? defaultMoveSpeed : 2.0f;
+            moveProvider.moveSpeed = defaultMoveSpeed;
             moveProvider.useGravity = true;
         }
     }
 
     private void ForceReleaseHands()
     {
-        var interactors = GetComponentsInChildren<XRBaseInteractor>();
-        foreach (var interactor in interactors)
+        if (characterController != null)
         {
-            if (interactor.hasSelection)
-                interactor.EndManualInteraction();
+            var interactors = characterController.GetComponentsInChildren<XRBaseInteractor>();
+            foreach (var interactor in interactors)
+            {
+                if (interactor is IXRSelectInteractor selectInteractor && selectInteractor.hasSelection)
+                {
+                    // Using modern XRI method to drop items
+                    interactor.interactionManager.SelectExit(selectInteractor, selectInteractor.firstInteractableSelected);
+                }
+            }
         }
     }
 }
