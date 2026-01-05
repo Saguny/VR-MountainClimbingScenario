@@ -29,10 +29,6 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
     public float penetrationDepth = 0.05f;
     public float detachCooldown = 0.2f;
 
-    [Header("Yank Settings")]
-    public bool useYankToDetach = true;
-    public float pullOutThreshold = 2.0f;
-
     [Header("Colliders")]
     public Collider tipCollider;
 
@@ -48,9 +44,7 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
     private XROrigin xrOrigin;
     private IXRSelectInteractor currentInteractor;
 
-    // CHANGED: We now track the hand relative to the XR Origin (Local Space)
     private Vector3 previousHandLocalPosition;
-
     private float nextStickTime = 0f;
     private float defaultStepOffset;
     private bool defaultGravityState;
@@ -129,22 +123,18 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
         isStuck = true;
         activePicks++;
 
-        // Freeze the pickaxe
         rb.isKinematic = true;
         interactable.movementType = XRBaseInteractable.MovementType.Kinematic;
         interactable.trackPosition = false;
         interactable.trackRotation = false;
 
-        // Visual penetration
         transform.position += transform.forward * penetrationDepth;
 
         if (currentInteractor is XRBaseInputInteractor inputInteractor)
             inputInteractor.SendHapticImpulse(0.7f, 0.15f);
 
-        // INITIALIZE LOCAL POSITION TRACKING
         if (currentInteractor != null)
         {
-            // Convert World Point -> Local Point (Relative to Rig)
             previousHandLocalPosition = xrOrigin.transform.InverseTransformPoint(currentInteractor.transform.position);
         }
 
@@ -167,7 +157,6 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
         activePicks--;
         if (activePicks < 0) activePicks = 0;
 
-        // Unfreeze pickaxe
         rb.isKinematic = false;
         interactable.trackPosition = true;
         interactable.trackRotation = true;
@@ -188,22 +177,17 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
     {
         bool isClimbing = activePicks > 0;
 
-        // Turn off normal walking and gravity
         if (moveProvider != null)
         {
             moveProvider.enabled = !isClimbing;
             moveProvider.useGravity = !isClimbing && defaultGravityState;
         }
 
-        // Turn off jump/crouch
         if (bodyTransformer != null)
             bodyTransformer.enabled = !isClimbing;
 
-        // Handle Character Controller
         if (characterController != null)
         {
-            // We KEEP collisions on (detectCollisions = true is default)
-            // But we remove the step offset so you don't snap up ledges while hanging
             characterController.stepOffset = isClimbing ? 0 : defaultStepOffset;
         }
     }
@@ -218,29 +202,10 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
 
         if (isStuck && currentInteractor != null && xrOrigin != null)
         {
-            // 1. Get current hand position in LOCAL space (Relative to Rig)
             Vector3 currentHandLocalPos = xrOrigin.transform.InverseTransformPoint(currentInteractor.transform.position);
-
-            // 2. Calculate how much the hand moved physically (ignoring Rig movement)
             Vector3 localMovement = currentHandLocalPos - previousHandLocalPosition;
-
-            // 3. Convert that local movement back to World Space to apply to the Rig
             Vector3 worldMovement = xrOrigin.transform.TransformDirection(localMovement);
 
-            // Yank Logic (using safe world velocity)
-            if (useYankToDetach)
-            {
-                Vector3 velocity = worldMovement / Time.deltaTime;
-                float pullDirMatch = Vector3.Dot(velocity.normalized, -transform.forward);
-
-                if (pullDirMatch > 0.5f && velocity.magnitude > pullOutThreshold)
-                {
-                    Unstick();
-                    return;
-                }
-            }
-
-            // Move the Player opposite to the hand
             Vector3 climbMove = -worldMovement;
 
             if (characterController != null)
@@ -252,7 +217,6 @@ public class IcePick : LocomotionProvider, IAnchorStateProvider
                 xrOrigin.transform.position += climbMove;
             }
 
-            // Update for next frame
             previousHandLocalPosition = currentHandLocalPos;
         }
     }
