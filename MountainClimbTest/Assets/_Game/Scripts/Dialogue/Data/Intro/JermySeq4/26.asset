@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97b43aa559389e54d93005f0a9453ead, type: 3}
   m_Name: 26
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Dialogue.DialogueLine
-  textContent: Simply grab one of your Anchors and put them on the Anchor Point!
+  textContent: Simply grab one of your Carabiners and put them on the Anchor Point!
   voiceClip: {fileID: 8300000, guid: 3d9fdad83a82a1f47bf7b5915ca24d1b, type: 3}
   extraDelay: 0.5
   animationTrigger: 

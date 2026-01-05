@@ -30,6 +30,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 045966d985b305449aade626508bc609, type: 2}
   - {fileID: 11400000, guid: 8beab629c17c59e4586371a7a6c61eba, type: 2}
   - {fileID: 11400000, guid: bfafc22514bd48a468025f86b7cb6875, type: 2}
+  - {fileID: 11400000, guid: 10b485f063fccd64f9ef180e0238c7a2, type: 2}
+  - {fileID: 11400000, guid: 27cb4a7e82b6ea64d9ddc8b0d84788da, type: 2}
+  - {fileID: 11400000, guid: a9d5c10e29f070c4bb73ef81ca99fbf6, type: 2}
   talkingBool: isTalking
   moveToPosition: 0
   waypointName: 
@@ -38,4 +41,4 @@ MonoBehaviour:
   onStartAction: 0
   onEndAction: 0
   advancesStory: 1
-  nextSequence: {fileID: 0}
+  nextSequence: {fileID: 11400000, guid: 8571276e969c3f845a601524acfa124d, type: 2}

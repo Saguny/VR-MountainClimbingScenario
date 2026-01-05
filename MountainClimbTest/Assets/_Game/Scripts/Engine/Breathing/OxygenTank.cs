@@ -15,7 +15,7 @@ public class OxygenTank : MonoBehaviour
     public Animator handAnimator;
 
     [Header("Input")]
-    public InputActionProperty useTankAction; // Bind to <XRController>{RightHand}/primaryButton
+    public InputActionProperty useTankAction;
 
     [Header("Oxygen Settings")]
     public float currentTankFuel = 100f;
@@ -58,7 +58,6 @@ public class OxygenTank : MonoBehaviour
         }
         else
         {
-            // Hand grabbed it
             _isGrabbed = true;
         }
     }
@@ -74,14 +73,12 @@ public class OxygenTank : MonoBehaviour
 
     private void Update()
     {
-        // 1. Force stay in socket if held
         if (_isGrabbed && _socketInteractor != null)
         {
             transform.position = _socketInteractor.transform.position;
             transform.rotation = _socketInteractor.transform.rotation;
         }
 
-        // 2. Direct Input Check (Magic Happens Here)
         bool isAPressed = useTankAction.action.ReadValue<float>() > 0.1f;
 
         if (_isGrabbed && isAPressed)
@@ -104,14 +101,15 @@ public class OxygenTank : MonoBehaviour
         {
             currentTankFuel = Mathf.Max(0, currentTankFuel - (usageCost * Time.deltaTime));
 
+            // Set variables so BreathManager allows Focus to happen
             breathManager.hasOxygenTank = true;
-            breathManager.isFocusing = true;
+            breathManager.currentTankFuel = currentTankFuel; // Sync fuel to manager
 
-            // if (handAnimator != null) handAnimator.SetBool("IsUsingTank", true);
+            breathManager.SetFocusState(true);
         }
         else
         {
-            breathManager.isFocusing = false;
+            StopOxygenEffects();
         }
 
         if (currentTankFuel <= 0 && warningDisplay != null)
@@ -120,7 +118,16 @@ public class OxygenTank : MonoBehaviour
 
     private void StopOxygenEffects()
     {
-        breathManager.isFocusing = false;
+        // Fix: Nur deaktivieren, wenn der Tank tatsächlich gerade benutzt wurde!
+        if (breathManager.hasOxygenTank)
+        {
+            breathManager.hasOxygenTank = false;
+
+            if (breathManager.isFocusing)
+            {
+                breathManager.SetFocusState(false);
+            }
+        }
     }
 
     private void UpdateGauge()

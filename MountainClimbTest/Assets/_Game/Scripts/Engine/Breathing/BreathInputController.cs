@@ -7,35 +7,54 @@ namespace MountainRescue.Systems
     public class BreathInputController : MonoBehaviour
     {
         public BreathManager breathManager;
-        public InputActionProperty focusAction; // X Button
+        public InputActionProperty focusAction;
 
-        private Coroutine _focusRoutine;
-        private float _focusDelay = 0.5f;
+        [SerializeField] private float focusDelay = 0.5f;
 
-        void Update()
+        private Coroutine focusRoutine;
+
+        private void OnEnable()
         {
-            bool isButtonDown = focusAction.action.ReadValue<float>() > 0.1f;
+            focusAction.action.started += OnFocusStarted;
+            focusAction.action.canceled += OnFocusCanceled;
+            focusAction.action.Enable();
+        }
 
-            if (isButtonDown && _focusRoutine == null && !breathManager.isFocusing)
+        private void OnDisable()
+        {
+            focusAction.action.started -= OnFocusStarted;
+            focusAction.action.canceled -= OnFocusCanceled;
+            focusAction.action.Disable();
+        }
+
+        private void OnFocusStarted(InputAction.CallbackContext ctx)
+        {
+            if (focusRoutine == null && !breathManager.isFocusing)
             {
-                _focusRoutine = StartCoroutine(FocusDelayRoutine());
+                focusRoutine = StartCoroutine(FocusDelayRoutine());
             }
-            else if (!isButtonDown)
+        }
+
+        private void OnFocusCanceled(InputAction.CallbackContext ctx)
+        {
+            if (focusRoutine != null)
             {
-                if (_focusRoutine != null)
-                {
-                    StopCoroutine(_focusRoutine);
-                    _focusRoutine = null;
-                }
-                breathManager.isFocusing = false;
+                StopCoroutine(focusRoutine);
+                focusRoutine = null;
+            }
+
+            if (breathManager.isFocusing)
+            {
+                breathManager.SetFocusState(false);
             }
         }
 
         private IEnumerator FocusDelayRoutine()
         {
-            yield return new WaitForSeconds(_focusDelay);
-            breathManager.isFocusing = true;
-            _focusRoutine = null;
+            yield return new WaitForSecondsRealtime(focusDelay);
+            breathManager.SetFocusState(true);
+            focusRoutine = null;
         }
+
     }
 }

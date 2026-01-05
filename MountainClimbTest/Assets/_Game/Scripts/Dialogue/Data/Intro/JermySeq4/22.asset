@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97b43aa559389e54d93005f0a9453ead, type: 3}
   m_Name: 22
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Dialogue.DialogueLine
-  textContent: Great Job!
+  textContent: Yay!
   voiceClip: {fileID: 8300000, guid: 2627f96914b63c843810d1ceb8215bcb, type: 3}
   extraDelay: 0.5
   animationTrigger: 

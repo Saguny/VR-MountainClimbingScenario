@@ -82,9 +82,24 @@ namespace MountainRescue.Systems
             if (_logTimer >= 1.0f)
             {
                 string zone = (currentHPa < thinAirThreshold) ? "<color=red>THIN AIR</color>" : "<color=cyan>NORMAL</color>";
-                Debug.Log($"<color=white>[STAMINA]</color> {currentStamina:F1}/{maxStamina} | {zone} | Pressure: {currentHPa:F0}hPa");
+                Debug.Log($"<color=white>[STAMINA]</color> {currentStamina:F1}/{maxStamina} | {zone} | Focus: {isFocusing}");
                 _logTimer = 0;
             }
+        }
+
+        // ENTRY POINT FOR INPUT
+        public void SetFocusState(bool state)
+        {
+            float hPa = sensorSuite.GetPressureHPa();
+
+            // Fix: Block focus in thin air unless the tank is being used
+            if (state && hPa < thinAirThreshold && !hasOxygenTank)
+            {
+                isFocusing = false;
+                return;
+            }
+
+            isFocusing = state;
         }
 
         private void UpdateAmbienceEffects()
@@ -129,7 +144,11 @@ namespace MountainRescue.Systems
 
         private void HandlePassiveDrain(float hPa)
         {
-            if (hPa < thinAirThreshold)
+            // Fix: Stop draining while successfully focusing (with tank or in good air)
+            // so the 5/sec regen actually shows progress.
+            bool isSuccessfullyFocusing = isFocusing && (hPa >= thinAirThreshold || hasOxygenTank);
+
+            if (hPa < thinAirThreshold && !isSuccessfullyFocusing)
             {
                 float drain = (drainRateByPressure != null && drainRateByPressure.length > 0)
                     ? drainRateByPressure.Evaluate(hPa)
@@ -145,7 +164,7 @@ namespace MountainRescue.Systems
         {
             if (currentTankFuel > 0)
             {
-                currentTankFuel = Mathf.Max(0, currentTankFuel - tankUsageCost);
+                currentTankFuel = Mathf.Max(0, currentTankFuel - (tankUsageCost * Time.deltaTime));
                 hasOxygenTank = true;
             }
             else
@@ -160,6 +179,7 @@ namespace MountainRescue.Systems
 
             if (isFocusing)
             {
+                // Fix: Ensure recovery happens in Good Air OR with Tank
                 if (!inThinAir || hasOxygenTank)
                 {
                     ModifyStamina(focusRegenRate * Time.deltaTime);
