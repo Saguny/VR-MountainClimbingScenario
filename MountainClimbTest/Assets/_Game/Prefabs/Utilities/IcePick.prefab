@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5427935319870618663}
   - component: {fileID: 6497310200413931374}
   - component: {fileID: 3388130602288828695}
-  - component: {fileID: 8129883174534458097}
+  - component: {fileID: 5331227978836792282}
   m_Layer: 8
   m_Name: IcePick
   m_TagString: Untagged
@@ -61,11 +61,11 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 0
+  m_UseGravity: 0
+  m_IsKinematic: 1
   m_Interpolate: 1
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!114 &6497310200413931374
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -228,12 +228,12 @@ MonoBehaviour:
   detachCooldown: 0.2
   useYankToDetach: 1
   pullOutThreshold: 1.5
-  tipCollider: {fileID: 576420120703174772}
+  tipCollider: {fileID: 0}
   characterController: {fileID: 0}
   bodyTransformer: {fileID: 0}
   moveProvider: {fileID: 0}
   breathManager: {fileID: 0}
---- !u!114 &8129883174534458097
+--- !u!114 &5331227978836792282
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -244,7 +244,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 03b03daec89569046bd8870bd3020062, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HandPoseSwitcher
+  m_EditorClassIdentifier: Assembly-CSharp::HandPoseInfo
   PoseID: 2
 --- !u!1 &4157857677969074810
 GameObject:
@@ -255,9 +255,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9181567387739391337}
-  - component: {fileID: 576420120703174772}
+  - component: {fileID: 7314815402765406689}
   m_Layer: 8
-  m_Name: Pick_Collider
+  m_Name: PickTransform
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -271,14 +271,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4157857677969074810}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.050457243, y: -0, z: -0, w: 0.99872625}
-  m_LocalPosition: {x: 0.017699987, y: 0.129, z: 0.055}
+  m_LocalRotation: {x: 0.18789767, y: -0, z: -0, w: 0.9821886}
+  m_LocalPosition: {x: 0.0222, y: 0.2031, z: 0.128}
   m_LocalScale: {x: 0.028213248, y: 0.035864748, z: 0.17466885}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7187925659730621050}
-  m_LocalEulerAnglesHint: {x: 5.784, y: 0, z: 0}
---- !u!65 &576420120703174772
+  m_LocalEulerAnglesHint: {x: 21.66, y: 0, z: 0}
+--- !u!65 &7314815402765406689
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -297,8 +297,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.55, y: 0.8, z: 0.19}
-  m_Center: {x: 0, y: 2.22, z: 0.47}
+  m_Size: {x: 0.75, y: 0.85, z: 0.36}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &4459216509288085517
 GameObject:
   m_ObjectHideFlags: 0
