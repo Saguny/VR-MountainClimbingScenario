@@ -14,9 +14,16 @@ namespace MountainRescue.Systems
 
         [Header("Audio Integration")]
         [SerializeField] private AudioMixer masterMixer;
-        [SerializeField] private string mixerParameterName = "AmbienceLowPass";
-        [SerializeField] private float minCutoff = 500f;
-        [SerializeField] private float maxCutoff = 22000f;
+
+        [Tooltip("The Exposed Parameter for the Ambience Low Pass Filter.")]
+        [SerializeField] private string ambienceParam = "AmbienceLowPass";
+
+        [Tooltip("The Exposed Parameter for the Music Low Pass Filter.")]
+        [SerializeField] private string musicParam = "MusicLowPass";
+
+        [Space]
+        [SerializeField] private float minCutoff = 500f;   // Muffled (0% Stamina)
+        [SerializeField] private float maxCutoff = 22000f; // Clear (100% Stamina)
 
         [Header("Stamina Settings")]
         public float maxStamina = 100f;
@@ -42,6 +49,7 @@ namespace MountainRescue.Systems
         private bool _wasInThinAir = false;
         private bool _lastFocusState;
         private float _logTimer;
+        private bool _isInLowStaminaState;
 
         [Header("Oxygen Tank Settings")]
         public float currentTankFuel = 100f;
@@ -63,6 +71,13 @@ namespace MountainRescue.Systems
 
             if (moveProvider == null)
                 Debug.LogWarning("BreathManager: No MoveProvider assigned.");
+
+            // Reset audio to clear on start
+            if (masterMixer != null)
+            {
+                masterMixer.SetFloat(ambienceParam, maxCutoff);
+                masterMixer.SetFloat(musicParam, maxCutoff);
+            }
         }
 
         private void Update()
@@ -76,23 +91,23 @@ namespace MountainRescue.Systems
             HandlePassiveDrain(currentHPa);
             HandleRegeneration(currentHPa);
             CheckThinAirThreshold(currentHPa);
-            UpdateAmbienceEffects();
+            UpdateAudioEffects();
 
+            // Debugging (Reduced spam)
             _logTimer += Time.deltaTime;
-            if (_logTimer >= 1.0f)
+            if (_logTimer >= 2.0f)
             {
                 string zone = (currentHPa < thinAirThreshold) ? "<color=red>THIN AIR</color>" : "<color=cyan>NORMAL</color>";
-                Debug.Log($"<color=white>[STAMINA]</color> {currentStamina:F1}/{maxStamina} | {zone} | Focus: {isFocusing}");
+                // Debug.Log($"[STAMINA] {currentStamina:F1}/{maxStamina} | {zone} | Tank: {hasOxygenTank}");
                 _logTimer = 0;
             }
         }
 
-        // ENTRY POINT FOR INPUT
         public void SetFocusState(bool state)
         {
             float hPa = sensorSuite.GetPressureHPa();
 
-            // Fix: Block focus in thin air unless the tank is being used
+            // Block focus in thin air unless the tank is being used
             if (state && hPa < thinAirThreshold && !hasOxygenTank)
             {
                 isFocusing = false;
@@ -102,16 +117,20 @@ namespace MountainRescue.Systems
             isFocusing = state;
         }
 
-        private void UpdateAmbienceEffects()
+        private void UpdateAudioEffects()
         {
             float staminaPercent = currentStamina / maxStamina;
 
+            // Muffles BOTH Ambience and Music as you get tired
             if (masterMixer != null)
             {
                 float targetCutoff = Mathf.Lerp(minCutoff, maxCutoff, staminaPercent);
-                masterMixer.SetFloat(mixerParameterName, targetCutoff);
+
+                masterMixer.SetFloat(ambienceParam, targetCutoff);
+                masterMixer.SetFloat(musicParam, targetCutoff);
             }
 
+            // Lower volume of generic ambience if manager exists
             if (MountainRescue.Engine.AmbienceManager.Instance != null)
             {
                 float targetVolume = Mathf.Lerp(0.3f, 1.0f, staminaPercent);
@@ -123,6 +142,7 @@ namespace MountainRescue.Systems
         {
             if (moveProvider == null) return;
 
+            // Prevent walking/turning while focusing
             if (isFocusing && moveProvider.enabled)
             {
                 moveProvider.enabled = false;
@@ -144,8 +164,6 @@ namespace MountainRescue.Systems
 
         private void HandlePassiveDrain(float hPa)
         {
-            // Fix: Stop draining while successfully focusing (with tank or in good air)
-            // so the 5/sec regen actually shows progress.
             bool isSuccessfullyFocusing = isFocusing && (hPa >= thinAirThreshold || hasOxygenTank);
 
             if (hPa < thinAirThreshold && !isSuccessfullyFocusing)
@@ -179,7 +197,6 @@ namespace MountainRescue.Systems
 
             if (isFocusing)
             {
-                // Fix: Ensure recovery happens in Good Air OR with Tank
                 if (!inThinAir || hasOxygenTank)
                 {
                     ModifyStamina(focusRegenRate * Time.deltaTime);
@@ -219,10 +236,14 @@ namespace MountainRescue.Systems
             if (Mathf.Abs(previousStamina - currentStamina) > 0.01f)
                 onStaminaChanged.Invoke(currentStamina / maxStamina);
 
-            if (previousStamina >= lowStaminaThreshold && currentStamina < lowStaminaThreshold)
-                onLowStaminaStateChanged.Invoke(true);
-            else if (previousStamina < lowStaminaThreshold && currentStamina >= lowStaminaThreshold)
-                onLowStaminaStateChanged.Invoke(false);
+            // Handle Low Stamina State Logic (With de-bouncing)
+            bool isCurrentlyLow = currentStamina < lowStaminaThreshold;
+
+            if (isCurrentlyLow != _isInLowStaminaState)
+            {
+                _isInLowStaminaState = isCurrentlyLow;
+                onLowStaminaStateChanged.Invoke(_isInLowStaminaState);
+            }
         }
 
         private void CheckThinAirThreshold(float hPa)
