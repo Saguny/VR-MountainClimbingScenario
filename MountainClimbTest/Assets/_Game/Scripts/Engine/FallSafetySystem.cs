@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Audio; // Required for AudioMixer
 using System.Collections;
 using MountainRescue.Interfaces;
 using MountainRescue.UI;
@@ -7,22 +8,37 @@ namespace MountainRescue.Systems.Safety
 {
     public class FallSafetySystem : MonoBehaviour
     {
-        private enum SafetyState
-        {
-            Grounded,
-            Falling,
-            Respawning
-        }
+        private enum SafetyState { Grounded, Falling, Respawning }
 
         [Header("Fall Logic")]
         [SerializeField] private float fatalFallDistance = 5.0f;
         [SerializeField] private float groundScanRange = 2.0f;
         [SerializeField] private LayerMask safeGroundMask;
 
-        [Header("Respawn")]
+        [Header("Audio Feedback")]
+        [SerializeField] private AudioSource audioSource;
+        [SerializeField] private AudioClip impactClip;
+
+        [Header("Audio Mixer Settings")]
+        [Tooltip("Assign your MasterMixer here.")]
+        [SerializeField] private AudioMixer targetMixer;
+
+        [Tooltip("Exposed Parameter name for Ambience.")]
+        [SerializeField] private string ambienceLowPassParam = "AmbienceLowPass";
+
+        [Tooltip("Exposed Parameter name for Music.")]
+        [SerializeField] private string musicLowPassParam = "MusicLowPass";
+
+        [Space]
+        [SerializeField] private float concussedCutoffHz = 600f; // Muffled sound
+        [SerializeField] private float normalCutoffHz = 22000f;  // Clear sound
+
+        [Header("Respawn Visuals")]
         [SerializeField] private Transform respawnLocation;
+        [SerializeField] private float whiteFlashDuration = 0.2f;
+        [SerializeField] private float fadeToBlackDuration = 2.0f;
         [SerializeField] private float blackoutDuration = 1.0f;
-        [SerializeField] private float fadeRecoverySpeed = 2.0f;
+        [SerializeField] private float recoveryFadeSpeed = 2.0f;
 
         [Header("Dependencies")]
         [SerializeField] private CharacterController playerController;
@@ -32,7 +48,6 @@ namespace MountainRescue.Systems.Safety
 
         [Header("Debug")]
         [SerializeField] private bool showDebugGizmos = true;
-        [Tooltip("If true, prints detailed logs to the console.")]
         [SerializeField] private bool verboseLogging = true;
 
         private SafetyState _currentState = SafetyState.Grounded;
@@ -45,21 +60,10 @@ namespace MountainRescue.Systems.Safety
 
             if (playerController == null) playerController = GetComponentInParent<CharacterController>();
             if (headCamera == null && Camera.main != null) headCamera = Camera.main.transform;
+            if (anchorSystem != null) _anchorSystem = anchorSystem.GetComponent<IAnchorStateProvider>();
 
-            if (anchorSystem != null)
-            {
-                _anchorSystem = anchorSystem.GetComponent<IAnchorStateProvider>();
-                if (verboseLogging) Debug.Log("[FallSafety] Anchor System Connected.");
-            }
-            else
-            {
-                if (verboseLogging) Debug.LogWarning("[FallSafety] No Anchor System assigned! Safety gear will be ignored.");
-            }
-
-            if (safeGroundMask == 0)
-            {
-                Debug.LogError("[FallSafety] Safe Ground Mask is NOT SET! You will fall forever.");
-            }
+            // Ensure sound starts clear (resetting any stuck state from previous runs)
+            SetMixerFreq(normalCutoffHz);
         }
 
         private void Update()
@@ -69,19 +73,10 @@ namespace MountainRescue.Systems.Safety
             switch (_currentState)
             {
                 case SafetyState.Grounded:
-                    // If we are currently grounded, check if we just walked off a ledge
-                    if (!CheckGroundContact())
-                    {
-                        StartFall();
-                    }
+                    if (!CheckGroundContact()) StartFall();
                     break;
-
                 case SafetyState.Falling:
                     UpdateFallingState();
-                    break;
-
-                case SafetyState.Respawning:
-                    // Do nothing, controls are locked
                     break;
             }
         }
@@ -89,24 +84,15 @@ namespace MountainRescue.Systems.Safety
         private void StartFall()
         {
             if (verboseLogging) Debug.Log($"[FallSafety] Ground lost. FALL STARTED at altitude: {headCamera.position.y:F2}");
-
             _currentState = SafetyState.Falling;
             _apexAltitude = headCamera.position.y;
         }
 
         private void UpdateFallingState()
         {
-            // Update highest point if we jumped up
-            if (headCamera.position.y > _apexAltitude)
-            {
-                _apexAltitude = headCamera.position.y;
-            }
+            if (headCamera.position.y > _apexAltitude) _apexAltitude = headCamera.position.y;
 
-            // Check if we have hit the ground
-            if (CheckGroundContact())
-            {
-                HandleImpact();
-            }
+            if (CheckGroundContact()) HandleImpact();
         }
 
         private void HandleImpact()
@@ -114,106 +100,105 @@ namespace MountainRescue.Systems.Safety
             float dropDistance = _apexAltitude - headCamera.position.y;
 
             if (verboseLogging)
-                Debug.Log($"[FallSafety] IMPACT DETECTED. Total Drop: {dropDistance:F2}m (Fatal Threshold: {fatalFallDistance}m)");
+                Debug.Log($"[FallSafety] IMPACT. Drop: {dropDistance:F2}m (Fatal: {fatalFallDistance}m)");
 
-            // 1. Check distance
             if (dropDistance < fatalFallDistance)
             {
-                if (verboseLogging) Debug.Log("[FallSafety] Fall was safe (distance too short). Returning to Grounded.");
                 _currentState = SafetyState.Grounded;
                 return;
             }
 
-            // 2. Check gear
-            if (_anchorSystem != null)
+            if (_anchorSystem != null && _anchorSystem.IsAnchored())
             {
-                bool isAnchored = _anchorSystem.IsAnchored();
-                if (verboseLogging) Debug.Log($"[FallSafety] Checking Safety Gear... Is Anchored? {isAnchored}");
-
-                if (isAnchored)
-                {
-                    if (verboseLogging) Debug.Log("[FallSafety] SAVED BY GEAR! Fatal impact avoided.");
-                    _currentState = SafetyState.Grounded;
-                    return;
-                }
+                if (verboseLogging) Debug.Log("[FallSafety] Saved by Safety Gear.");
+                _currentState = SafetyState.Grounded;
+                return;
             }
 
-            // 3. Die
-            if (verboseLogging) Debug.Log("[FallSafety] FATAL FALL! Starting Respawn Sequence.");
-            StartCoroutine(RespawnRoutine());
+            StartCoroutine(ConcussionRespawnRoutine());
         }
 
         private bool CheckGroundContact()
         {
             Vector3 feetPos = playerController.bounds.center - new Vector3(0, playerController.bounds.extents.y, 0);
-
-            // Start slightly above feet to ensure we catch the floor even if slightly clipped
             Vector3 origin = feetPos + Vector3.up * 0.1f;
-            float maxDist = 0.1f + groundScanRange;
-            float radius = playerController.radius * 0.8f;
-
-            bool hit = Physics.SphereCast(origin, radius, Vector3.down, out RaycastHit hitInfo, maxDist, safeGroundMask);
-
-            // Optional: Very verbose raycast logging (comment out if too spammy)
-            // if (verboseLogging && hit) Debug.Log($"[FallSafety] Ground detected: {hitInfo.collider.name} at dist {hitInfo.distance}");
-
-            return hit;
+            return Physics.SphereCast(origin, playerController.radius * 0.8f, Vector3.down, out _, 0.1f + groundScanRange, safeGroundMask);
         }
 
-        private IEnumerator RespawnRoutine()
+        private IEnumerator ConcussionRespawnRoutine()
         {
             _currentState = SafetyState.Respawning;
-
-            // Lock controls
             playerController.enabled = false;
 
-            // Fade out
-            if (screenFader != null)
+            // 1. IMPACT FX (Audio + Mixer)
+            if (audioSource && impactClip) audioSource.PlayOneShot(impactClip);
+
+            // Muffle BOTH Ambience and Music immediately
+            SetMixerFreq(concussedCutoffHz);
+
+            // 2. FLASH WHITE
+            if (screenFader)
             {
-                if (verboseLogging) Debug.Log("[FallSafety] Fading to black...");
-                screenFader.SnapToBlack();
+                screenFader.SetColor(new Color(1, 1, 1, 0.6f));
+                yield return screenFader.FadeToColor(Color.white, whiteFlashDuration);
             }
 
-            yield return new WaitForSeconds(blackoutDuration);
-
-            // Teleport
-            if (respawnLocation != null)
+            // 3. FADE TO BLACK
+            if (screenFader)
             {
-                if (verboseLogging) Debug.Log($"[FallSafety] Teleporting to {respawnLocation.name}...");
-
-                Transform rigTransform = playerController.transform;
-                rigTransform.position = respawnLocation.position;
-
-                // Align rotation
-                float headYRotation = headCamera.localEulerAngles.y;
-                float targetYRotation = respawnLocation.eulerAngles.y;
-                rigTransform.rotation = Quaternion.Euler(0, targetYRotation - headYRotation, 0);
-
-                Physics.SyncTransforms();
+                yield return screenFader.FadeToColor(Color.black, fadeToBlackDuration);
             }
             else
             {
-                if (verboseLogging) Debug.LogError("[FallSafety] No Respawn Point assigned!");
+                yield return new WaitForSeconds(fadeToBlackDuration);
             }
 
-            // Unlock controls
-            playerController.enabled = true;
+            // 4. TELEPORT
+            yield return new WaitForSeconds(blackoutDuration);
 
-            // Reset state
+            if (respawnLocation != null)
+            {
+                Transform rigTransform = playerController.transform;
+                rigTransform.position = respawnLocation.position;
+
+                float headY = headCamera.localEulerAngles.y;
+                float targetY = respawnLocation.eulerAngles.y;
+                rigTransform.rotation = Quaternion.Euler(0, targetY - headY, 0);
+
+                Physics.SyncTransforms();
+            }
+            else if (verboseLogging)
+            {
+                Debug.LogError("[FallSafety] No Respawn Point Assigned!");
+            }
+
+            // 5. RECOVERY
+            // Restore audio clarity to both groups
+            SetMixerFreq(normalCutoffHz);
+
+            playerController.enabled = true;
             _currentState = SafetyState.Grounded;
             _apexAltitude = headCamera.position.y;
 
-            if (verboseLogging) Debug.Log("[FallSafety] Respawn Complete. Player grounded.");
+            if (screenFader) yield return screenFader.FadeIn(recoveryFadeSpeed);
+        }
 
-            // Fade in
-            if (screenFader != null) yield return screenFader.FadeIn(fadeRecoverySpeed);
+        private void SetMixerFreq(float freq)
+        {
+            if (targetMixer != null)
+            {
+                // Set Ambience
+                targetMixer.SetFloat(ambienceLowPassParam, freq);
+
+                // Set Music
+                targetMixer.SetFloat(musicLowPassParam, freq);
+            }
         }
 
         private void OnDrawGizmos()
         {
             if (!showDebugGizmos || playerController == null) return;
 
-            // Color code the state
             switch (_currentState)
             {
                 case SafetyState.Grounded: Gizmos.color = Color.green; break;

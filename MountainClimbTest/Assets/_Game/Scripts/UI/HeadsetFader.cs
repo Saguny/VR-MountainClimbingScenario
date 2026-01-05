@@ -1,67 +1,91 @@
 using UnityEngine;
-using System.Collections;
 using UnityEngine.UI;
+using System.Collections;
 
 namespace MountainRescue.UI
 {
     public class HeadsetFader : MonoBehaviour
     {
         [SerializeField] private Image fadeImage;
-
-        [Header("Fader Settings")]
-        [Tooltip("Default speed (seconds) for normal transitions.")]
         [SerializeField] private float defaultFadeTime = 1.5f;
 
         private void Awake()
         {
-            if (fadeImage == null) fadeImage = GetComponentInChildren<Image>();
-            SetAlpha(0f);
-        }
-
-        // --- NEW METHOD: Instant Blackout ---
-        public void SnapToBlack()
-        {
-            StopAllCoroutines(); // Cancel any existing fades
-            SetAlpha(1.0f);      // Instant black
-        }
-        // ------------------------------------
-
-        public IEnumerator FadeOut(float duration) => FadeTo(1f, duration);
-        public IEnumerator FadeIn(float duration) => FadeTo(0f, duration);
-
-        // Default overloads
-        public IEnumerator FadeOut() => FadeTo(1f, defaultFadeTime);
-        public IEnumerator FadeIn() => FadeTo(0f, defaultFadeTime);
-
-        private IEnumerator FadeTo(float targetAlpha, float duration)
-        {
-            float startAlpha = fadeImage.color.a;
-            float time = 0f;
-
-            // Safety check to prevent divide by zero
-            if (duration <= 0f)
-            {
-                SetAlpha(targetAlpha);
-                yield break;
-            }
-
-            while (time < duration)
-            {
-                time += Time.deltaTime;
-                SetAlpha(Mathf.Lerp(startAlpha, targetAlpha, time / duration));
-                yield return null;
-            }
-            SetAlpha(targetAlpha);
-        }
-
-        private void SetAlpha(float alpha)
-        {
             if (fadeImage != null)
             {
-                Color c = fadeImage.color;
-                c.a = alpha;
-                fadeImage.color = c;
+                fadeImage.raycastTarget = false;
+                // Ensure we start clear if not specified otherwise
+                if (fadeImage.color.a == 0)
+                    fadeImage.color = new Color(0, 0, 0, 0);
             }
+        }
+
+        // --- STANDARD METHODS (Defaults to Black) ---
+
+        public void SnapToBlack()
+        {
+            if (fadeImage) fadeImage.color = Color.black;
+        }
+
+        public void SnapToClear()
+        {
+            if (fadeImage) fadeImage.color = new Color(0, 0, 0, 0);
+        }
+
+        public IEnumerator FadeOut(float duration = -1)
+        {
+            // Default "Fade Out" means "Fade to Black"
+            yield return FadeToColor(Color.black, duration);
+        }
+
+        public IEnumerator FadeIn(float duration = -1)
+        {
+            // Default "Fade In" means "Fade to Clear" from whatever color we are currently at
+            float time = duration > 0 ? duration : defaultFadeTime;
+
+            if (fadeImage != null)
+            {
+                Color startColor = fadeImage.color;
+                Color targetColor = new Color(startColor.r, startColor.g, startColor.b, 0f);
+                yield return FadeToTarget(targetColor, time);
+            }
+        }
+
+        // --- COLOR OVERRIDES (For Flashbangs/Damage) ---
+
+        public void SetColor(Color color)
+        {
+            if (fadeImage) fadeImage.color = color;
+        }
+
+        public void SnapToColor(Color color)
+        {
+            if (fadeImage) fadeImage.color = color;
+        }
+
+        public IEnumerator FadeToColor(Color targetColor, float duration = -1)
+        {
+            float time = duration > 0 ? duration : defaultFadeTime;
+            yield return FadeToTarget(targetColor, time);
+        }
+
+        // --- INTERNAL LOGIC ---
+
+        private IEnumerator FadeToTarget(Color targetColor, float duration)
+        {
+            if (fadeImage == null) yield break;
+
+            Color startColor = fadeImage.color;
+            float timer = 0f;
+
+            while (timer < duration)
+            {
+                timer += Time.deltaTime;
+                fadeImage.color = Color.Lerp(startColor, targetColor, timer / duration);
+                yield return null;
+            }
+
+            fadeImage.color = targetColor;
         }
     }
 }

@@ -4625,6 +4625,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 5a3175c146b490644a93c256cac0037a, type: 3}
   m_PrefabInstance: {fileID: 824185916}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &831134914 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9000822941449743512, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+  m_PrefabInstance: {fileID: 1963763627610380052}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &832039724
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21117,6 +21122,10 @@ PrefabInstance:
       propertyPath: warningAudioSource
       value: 
       objectReference: {fileID: 982242187}
+    - target: {fileID: 1901009326277439656, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_Color.a
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2088877816514486239, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: focusInput.m_Reference
       value: 
@@ -21129,6 +21138,10 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2957275646022134688, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3205639540365388349, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: m_Layer
       value: 8
@@ -21138,9 +21151,21 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 982242193}
     - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: impactClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 57681fad5f855fa4ab531d16a68a4eda, type: 3}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: audioSource
+      value: 
+      objectReference: {fileID: 982242187}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: screenFader
       value: 
       objectReference: {fileID: 172214850}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: targetMixer
+      value: 
+      objectReference: {fileID: 24100000, guid: 88ac86fa8916bea4790d3ee5e171a19d, type: 2}
     - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: anchorSystem
       value: 
@@ -21162,9 +21187,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1780934407}
     - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: lowPassParamName
+      value: AmbienceLowPass,
+      objectReference: {fileID: 0}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: playerController
       value: 
       objectReference: {fileID: 324718545}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: concussedCutoffHz
+      value: 300
+      objectReference: {fileID: 0}
     - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: fatalFallDistance
       value: 2
@@ -21189,6 +21222,30 @@ PrefabInstance:
       propertyPath: focusAction.m_Reference
       value: 
       objectReference: {fileID: 101864873}
+    - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: baseGrabCost
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: penaltyHeight
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: tankUsageCost
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: onThinAirReached.m_PersistentCalls.m_Calls.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: onThinAirReached.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 831134914}
+    - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: onThinAirReached.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 4447497608149130528, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: detachInput.m_Reference
       value: 
@@ -21213,6 +21270,34 @@ PrefabInstance:
       propertyPath: m_SnapTurn
       value: 
       objectReference: {fileID: 1793387264}
+    - target: {fileID: 5733719328104410852, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: focusClip
+      value: 
+      objectReference: {fileID: 8300000, guid: b71f33e726c151f46a703f530d9240a5, type: 3}
+    - target: {fileID: 5733719328104410852, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: focusColor.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5733719328104410852, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: focusColor.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5733719328104410852, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: focusColor.r
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5733719328104410852, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: focusIntensity
+      value: 0.756
+      objectReference: {fileID: 0}
+    - target: {fileID: 5733719328104410852, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: lowStaminaClip
+      value: 
+      objectReference: {fileID: 8300000, guid: efc627692b598bc419dc7607f99cd7e6, type: 3}
+    - target: {fileID: 5733719328104410852, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: lowStaminaIntensity
+      value: 0.756
+      objectReference: {fileID: 0}
     - target: {fileID: 5912614067473581359, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: currentTarget
       value: 
