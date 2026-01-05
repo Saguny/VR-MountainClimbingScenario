@@ -222,16 +222,28 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 0}
-  iceTag: Ice
-  hitVelocityThreshold: 1.5
-  penetrationDepth: 0.05
+  climbableLayers:
+    serializedVersion: 2
+    m_Bits: 64
+  minHitVelocity: 0.8
+  maxHitVelocity: 3
+  minPenetrationDepth: 0.03
+  maxPenetrationDepth: 0.08
   detachCooldown: 0.2
   useYankToDetach: 1
   pullOutThreshold: 1.5
-  tipCollider: {fileID: 0}
+  minStickDuration: 0.25
+  OnStick:
+    m_PersistentCalls:
+      m_Calls: []
+  OnDetach:
+    m_PersistentCalls:
+      m_Calls: []
+  OnStickFail:
+    m_PersistentCalls:
+      m_Calls: []
+  tipCollider: {fileID: 7314815402765406689}
   characterController: {fileID: 0}
-  bodyTransformer: {fileID: 0}
-  moveProvider: {fileID: 0}
   breathManager: {fileID: 0}
 --- !u!114 &5331227978836792282
 MonoBehaviour:

@@ -2,130 +2,130 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 
-public class SnugColliderGenerator : EditorWindow
+public class MeshFillerCollider : EditorWindow
 {
     private GameObject targetObject;
-    private float plateSize = 2f;    // Width/Height of the box
-    private float thickness = 0.5f;  // How thick the collider is
-    private float offset = 0.0f;     // Fine-tune depth
+    private float plateSize = 0.5f;
+    private float thickness = 0.2f;
     private bool addRigidbody = true;
 
-    [MenuItem("Tools/Sagun's Snug Plater")]
-    public static void ShowWindow() => GetWindow<SnugColliderGenerator>("Snug Collider Gen");
+    [Range(0.1f, 2.0f)]
+    private float fillDensity = 0.8f;
+
+    [MenuItem("Tools/Sagun's Fixed Filler")]
+    public static void ShowWindow() => GetWindow<MeshFillerCollider>("Fixed Filler");
 
     private void OnGUI()
     {
-        GUILayout.Label("Surface Plater (Rotated to Mesh)", EditorStyles.boldLabel);
+        GUILayout.Label("Surface Filler (Scale 176 Fix)", EditorStyles.boldLabel);
         targetObject = (GameObject)EditorGUILayout.ObjectField("Target Mesh", targetObject, typeof(GameObject), true);
 
-        GUILayout.Space(10);
-        plateSize = EditorGUILayout.FloatField("Plate Size (Width)", plateSize);
-        thickness = EditorGUILayout.FloatField("Thickness (Depth)", thickness);
-        offset = EditorGUILayout.FloatField("Depth Offset", offset);
+        GUILayout.Space(5);
+        plateSize = EditorGUILayout.FloatField("Plate Size (World Units)", plateSize);
+        thickness = EditorGUILayout.FloatField("Thickness", thickness);
         addRigidbody = EditorGUILayout.Toggle("Add Rigidbody", addRigidbody);
+        fillDensity = EditorGUILayout.Slider("Fill Density", fillDensity, 0.1f, 1.5f);
 
-        if (GUILayout.Button("Generate Snug Colliders")) Generate();
+        if (GUILayout.Button("Fill Mesh Surface")) Generate();
     }
 
     private void Generate()
     {
         if (!targetObject) return;
-        MeshCollider mc = targetObject.GetComponent<MeshCollider>();
-        if (!mc)
+        MeshFilter mf = targetObject.GetComponent<MeshFilter>();
+        if (!mf) return;
+
+        Mesh mesh = mf.sharedMesh;
+        Vector3[] vertices = mesh.vertices;
+        int[] triangles = mesh.triangles;
+        Vector3[] normals = mesh.normals;
+
+        // Container erstellen (erstmal ohne Parent, damit Scale 1,1,1 ist)
+        GameObject container = new GameObject("FilledColliders_" + targetObject.name);
+        Undo.RegisterCreatedObjectUndo(container, "Generate Filled Colliders");
+
+        // Position und Rotation übernehmen, aber Scale auf 1 lassen (World Scale)
+        container.transform.position = targetObject.transform.position;
+        container.transform.rotation = targetObject.transform.rotation;
+        container.transform.localScale = Vector3.one;
+
+        Vector3 parentLossyScale = targetObject.transform.lossyScale;
+        int totalBoxes = 0;
+
+        for (int i = 0; i < triangles.Length; i += 3)
         {
-            EditorUtility.DisplayDialog("Error", "Target needs a MeshCollider!", "OK");
-            return;
-        }
+            // Indizes
+            int i1 = triangles[i];
+            int i2 = triangles[i + 1];
+            int i3 = triangles[i + 2];
 
-        Transform parent = targetObject.transform;
+            // Local Space Vertices
+            Vector3 v1 = vertices[i1];
+            Vector3 v2 = vertices[i2];
+            Vector3 v3 = vertices[i3];
 
-        // 1. Create a container
-        GameObject container = new GameObject("SnugColliders_" + targetObject.name);
-        Undo.RegisterCreatedObjectUndo(container, "Generate Snug Colliders");
-        container.transform.SetParent(parent, false); // Parent to mesh
-        container.transform.localPosition = Vector3.zero;
-        container.transform.localRotation = Quaternion.identity;
-        container.transform.localScale = Vector3.one; // Reset scale to handle the 176 properly
+            // Normalen
+            Vector3 n1 = normals[i1];
+            Vector3 n2 = normals[i2];
+            Vector3 n3 = normals[i3];
+            Vector3 localNormal = (n1 + n2 + n3).normalized;
 
-        Bounds bounds = mc.bounds;
+            // Echte World Positionen der Ecken berechnen (hier kommt der Fix für Scale 176)
+            Vector3 w1 = targetObject.transform.TransformPoint(v1);
+            Vector3 w2 = targetObject.transform.TransformPoint(v2);
+            Vector3 w3 = targetObject.transform.TransformPoint(v3);
 
-        // We calculate step size based on World Scale to ensure we cover the area properly
-        // If parent scale is 176, we need to adjust our loop so we don't take 10 million steps.
-        float stepX = plateSize;
-        float stepY = plateSize;
-        float stepZ = plateSize;
+            // Fläche des echten World-Dreiecks berechnen
+            float triangleArea = Vector3.Cross(w2 - w1, w3 - w1).magnitude * 0.5f;
 
-        List<Vector3> placedPositions = new List<Vector3>();
-        int count = 0;
+            float boxArea = plateSize * plateSize;
+            int boxesNeeded = Mathf.CeilToInt((triangleArea / boxArea) * fillDensity);
 
-        // 2. Loop through a grid SURROUNDING the object
-        for (float x = bounds.min.x; x <= bounds.max.x; x += stepX)
-        {
-            for (float y = bounds.min.y; y <= bounds.max.y; y += stepY)
+            for (int b = 0; b < boxesNeeded; b++)
             {
-                for (float z = bounds.min.z; z <= bounds.max.z; z += stepZ)
+                // Zufallspunkt auf Dreieck (Barycentric)
+                float r1 = Random.value;
+                float r2 = Random.value;
+
+                if (r1 + r2 > 1)
                 {
-
-                    Vector3 scanPoint = new Vector3(x, y, z);
-
-                    // 3. Find the closest point on the actual mesh surface from our grid point
-                    Vector3 closestSurfacePoint = mc.ClosestPoint(scanPoint);
-
-                    // Optimization: If the grid point is too far from the surface, skip it
-                    if (Vector3.Distance(scanPoint, closestSurfacePoint) > plateSize * 2) continue;
-
-                    // 4. Raycast to get the Normal (Rotation)
-                    // ClosestPoint gives position, but not the Normal. We raycast FROM slightly outside TO the surface.
-                    Vector3 directionIn = (closestSurfacePoint - scanPoint).normalized;
-
-                    // Fallback: if scanPoint is exactly on surface, offset it slightly
-                    if (directionIn == Vector3.zero) directionIn = Vector3.up;
-
-                    Ray ray = new Ray(scanPoint, directionIn);
-                    if (mc.Raycast(ray, out RaycastHit hit, plateSize * 3))
-                    {
-
-                        // Check if we already placed a box too close to this spot (prevent stacking)
-                        if (IsTooClose(hit.point, placedPositions, plateSize * 0.5f)) continue;
-
-                        CreateBox(hit, container);
-                        placedPositions.Add(hit.point);
-                        count++;
-                    }
+                    r1 = 1 - r1;
+                    r2 = 1 - r2;
                 }
+
+                // WICHTIG: Wir interpolieren jetzt zwischen den WORLD Positionen
+                Vector3 worldPos = w1 + r1 * (w2 - w1) + r2 * (w3 - w1);
+
+                CreateBox(container, worldPos, localNormal);
+                totalBoxes++;
             }
         }
 
-        Debug.Log($"Generated {count} snug colliders.");
+        // Am Ende parenten wir den Container an das Mesh.
+        // "true" sorgt dafür, dass Unity den Scale des Containers runterrechnet (z.B. auf 0.005),
+        // damit die World-Size der Boxen erhalten bleibt.
+        container.transform.SetParent(targetObject.transform, true);
+
+        Debug.Log($"Fertig! {totalBoxes} Boxen in korrekter Größe generiert.");
     }
 
-    private void CreateBox(RaycastHit hit, GameObject container)
+    private void CreateBox(GameObject container, Vector3 worldPos, Vector3 localNormal)
     {
         GameObject box = new GameObject("Plate");
-        box.transform.SetParent(container.transform, true); // Keep world pos
+        // Wir setzen Parent auf container (der aktuell noch Scale 1,1,1 hat)
+        box.transform.SetParent(container.transform, true);
+        box.transform.position = worldPos;
 
-        // A. ALIGNMENT: Rotate the box so its "Up" faces the wall normal
-        box.transform.rotation = Quaternion.LookRotation(hit.normal);
+        // Rotation: Local Normal in World Normal wandeln
+        Vector3 worldNormal = targetObject.transform.TransformDirection(localNormal);
+        if (worldNormal != Vector3.zero)
+            box.transform.rotation = Quaternion.LookRotation(worldNormal);
 
-        // B. POSITION: Place at hit point, then move INWARD by half thickness so it's flush
-        // We also apply the user 'offset' if they want to bury it deeper
-        float depthAdjustment = (thickness / 2) + offset;
-        box.transform.position = hit.point - (hit.normal * depthAdjustment);
+        // Da wir im World Space arbeiten, setzen wir die Größe direkt
+        // Thickness als Z (Tiefe), PlateSize als X/Y
+        box.transform.localScale = new Vector3(plateSize, plateSize, thickness);
 
-        // C. SCALING: We must compensate for the parent's massive scale (176)
-        // Since the box is a child of the 176-scale parent, we divide our desired size by that scale.
-        Vector3 parentScale = targetObject.transform.lossyScale;
-
-        // We make it a flat "Plate" (Wide X/Y, Thin Z)
-        box.transform.localScale = new Vector3(
-            plateSize / parentScale.x,
-            plateSize / parentScale.y, // Using Y for width/height symmetry
-            thickness / parentScale.z
-        );
-
-        // D. PHYSICS
         BoxCollider bc = box.AddComponent<BoxCollider>();
-        // Since we scaled the transform, the collider size can just be 1,1,1
         bc.size = Vector3.one;
 
         if (addRigidbody)
@@ -134,15 +134,5 @@ public class SnugColliderGenerator : EditorWindow
             rb.isKinematic = true;
             rb.useGravity = false;
         }
-    }
-
-    private bool IsTooClose(Vector3 pos, List<Vector3> list, float minDist)
-    {
-        // Simple distance check to prevent overlapping boxes on the exact same spot
-        foreach (Vector3 p in list)
-        {
-            if (Vector3.SqrMagnitude(pos - p) < minDist * minDist) return true;
-        }
-        return false;
     }
 }
