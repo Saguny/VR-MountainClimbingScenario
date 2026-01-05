@@ -1112,6 +1112,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 5a3175c146b490644a93c256cac0037a, type: 3}
   m_PrefabInstance: {fileID: 161571702}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &172214850 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1949159923347319704, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+  m_PrefabInstance: {fileID: 1963763627610380052}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cabba1563294fc45b469e592119b76b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.UI.HeadsetFader
 --- !u!1001 &190841132
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1784,6 +1795,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
   m_Asset: {fileID: -944628639613478452, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   m_ActionId: 0c0991c5-d329-4afc-8892-1076b440477c
+--- !u!143 &324718545 stripped
+CharacterController:
+  m_CorrespondingSourceObject: {fileID: 6211940969769372850, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+  m_PrefabInstance: {fileID: 1963763627610380052}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &326903641
 GameObject:
   m_ObjectHideFlags: 0
@@ -10481,6 +10497,11 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!4 &982242193 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 20855113953941338, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+  m_PrefabInstance: {fileID: 1963763627610380052}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &998304579
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11484,6 +11505,11 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 5a3175c146b490644a93c256cac0037a, type: 3}
   m_PrefabInstance: {fileID: 1186976954}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1189735222 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7324994647639559011, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+  m_PrefabInstance: {fileID: 1963763627610380052}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1191344284
 PrefabInstance:
@@ -19614,7 +19640,7 @@ Transform:
   m_GameObject: {fileID: 1780934406}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -30.73, y: 8.295, z: -11.192}
+  m_LocalPosition: {x: -10.99, y: 8.199, z: -11.537}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -21099,9 +21125,65 @@ PrefabInstance:
       propertyPath: detachInput.m_Reference
       value: 
       objectReference: {fileID: 1842915996}
+    - target: {fileID: 2583579195550338303, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3205639540365388349, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: headCamera
+      value: 
+      objectReference: {fileID: 982242193}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: screenFader
+      value: 
+      objectReference: {fileID: 172214850}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: anchorSystem
+      value: 
+      objectReference: {fileID: 1189735222}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: respawnPoint
+      value: 
+      objectReference: {fileID: 1780934407}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: verboseLogging
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: groundScanRange
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: respawnLocation
+      value: 
+      objectReference: {fileID: 1780934407}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: playerController
+      value: 
+      objectReference: {fileID: 324718545}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: fatalFallDistance
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: groundMask.m_Bits
+      value: 512
+      objectReference: {fileID: 0}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: fallThresholdMeters
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: safeGroundMask.m_Bits
+      value: 512
+      objectReference: {fileID: 0}
+    - target: {fileID: 3530373181307229865, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3731641668935118001, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: focusAction.m_Reference
@@ -21145,7 +21227,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6211940969769372850, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: m_ExcludeLayers.m_Bits
-      value: 256
+      value: 320
       objectReference: {fileID: 0}
     - target: {fileID: 6867450878148980307, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: target
@@ -21185,7 +21267,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7503403814854284412, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.43
+      value: -0.93
       objectReference: {fileID: 0}
     - target: {fileID: 8125081100299677057, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: npcController

@@ -31,7 +31,7 @@ public class PlayerSafetyManager : MonoBehaviour
         RequestGroundSafetyCheck();
     }
 
-    private void Update()
+    private void LateUpdate()
     {
         if (xrOrigin != null && characterController != null && xrOrigin.Camera != null)
         {
@@ -58,7 +58,7 @@ public class PlayerSafetyManager : MonoBehaviour
         // 2. Raycast nach unten (10 Meter Reichweite)
         if (Physics.Raycast(headPos, Vector3.down, out RaycastHit hit, 10.0f, groundLayer))
         {
-            float feetPos = xrOrigin.transform.position.y;
+            float feetPos = xrOrigin.transform.position.y - 0.6f;
             float groundY = hit.point.y;
 
             // 3. Wenn die Füße TIEFER sind als der Boden (minus 5cm Toleranz)
