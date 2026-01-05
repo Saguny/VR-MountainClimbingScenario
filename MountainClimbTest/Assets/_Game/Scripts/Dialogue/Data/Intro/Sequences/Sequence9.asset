@@ -17,7 +17,7 @@ MonoBehaviour:
   talkingBool: isWalking
   moveToPosition: 1
   waypointName: Waypoint5
-  moveSpeed: 4
+  moveSpeed: 6
   talkWhileWalking: 1
   onStartAction: 1
   onEndAction: 0

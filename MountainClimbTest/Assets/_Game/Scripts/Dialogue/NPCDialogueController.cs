@@ -1,6 +1,10 @@
-using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
+using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Locomotion;
+// REQUIRED for DynamicMoveProvider
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 namespace MountainRescue.Dialogue
@@ -20,9 +24,9 @@ namespace MountainRescue.Dialogue
         [SerializeField] private string walkingBool = "isWalking";
         [SerializeField] private float delayBetweenLines = 0.5f;
 
-        [Header("XR Player Settings")]
-        [Tooltip("The DynamicMoveProvider script on your XR Origin.")]
-        [SerializeField] private DynamicMoveProvider dynamicMoveProvider;
+        [Header("Player Movement Control")]
+        [Tooltip("Drag the XROrigin (or the object with DynamicMoveProvider) here.")]
+        public DynamicMoveProvider moveProvider;
 
         [Header("Manual Head Tracking (Non-Humanoid)")]
         [Tooltip("Drag the specific bone for the Head here.")]
@@ -40,10 +44,14 @@ namespace MountainRescue.Dialogue
         [Header("Initial Content")]
         [SerializeField] private DialogueSequence initialSequence;
 
+        // --- INTERNAL VARIABLES ---
         private Transform _waypointContainer;
         private Coroutine _activeRoutine;
         private Transform _playerHead;
         private bool _isWalking = false;
+
+        // Speed Caching
+        private float _cachedMoveSpeed = 0f;
 
         public delegate void DialogueEvent(string text);
         public event DialogueEvent OnSubtitleUpdated;
@@ -57,6 +65,12 @@ namespace MountainRescue.Dialogue
             if (subtitleTMP != null) subtitleTMP.gameObject.SetActive(false);
 
             if (Camera.main != null) _playerHead = Camera.main.transform;
+
+            // Initialize cached speed to avoid 0 bugs if we unlock before locking
+            if (moveProvider != null)
+            {
+                _cachedMoveSpeed = moveProvider.moveSpeed;
+            }
         }
 
         private void LateUpdate()
@@ -115,13 +129,36 @@ namespace MountainRescue.Dialogue
             OnSubtitleUpdated?.Invoke(text);
         }
 
+        // --- FIXED METHOD: Modifies MoveSpeed instead of disabling components ---
         private void ApplyXRAction(SequenceAction action)
         {
-            if (action == SequenceAction.None || dynamicMoveProvider == null) return;
-            // Only affect movement, keep turning free
-            dynamicMoveProvider.enabled = (action == SequenceAction.UnlockPlayerMovement);
+            if (action == SequenceAction.None) return;
+            if (moveProvider == null) return;
+
+            // True = Unlock (Restore Speed), False = Lock (Set Speed 0)
+            bool shouldUnlock = (action == SequenceAction.UnlockPlayerMovement);
+
+            if (shouldUnlock)
+            {
+                // Restore the speed we cached earlier
+                moveProvider.moveSpeed = _cachedMoveSpeed;
+                Debug.Log($"[Dialogue] Player Movement RESTORED to {_cachedMoveSpeed}");
+            }
+            else
+            {
+                // Cache the current speed and set to 0
+                // We check if speed > 0 to prevent caching "0" if we accidentally lock twice
+                if (moveProvider.moveSpeed > 0)
+                {
+                    _cachedMoveSpeed = moveProvider.moveSpeed;
+                }
+
+                moveProvider.moveSpeed = 0f;
+                Debug.Log("[Dialogue] Player Movement STOPPED (Speed set to 0)");
+            }
         }
 
+        // --- ORIGINAL METHOD PRESERVED ---
         private IEnumerator PlaySequenceRoutine(DialogueSequence sequence)
         {
             if (sequence == null) yield break;
@@ -192,6 +229,7 @@ namespace MountainRescue.Dialogue
             }
         }
 
+        // --- ORIGINAL METHOD PRESERVED ---
         private IEnumerator LineTriggerRoutine(string trigger, int count)
         {
             for (int i = 0; i < count; i++)
@@ -201,6 +239,7 @@ namespace MountainRescue.Dialogue
             }
         }
 
+        // --- ORIGINAL METHOD PRESERVED ---
         private IEnumerator MoveToRoutine(string waypointName, float speed)
         {
             if (_waypointContainer == null) yield break;
@@ -210,7 +249,6 @@ namespace MountainRescue.Dialogue
             CharacterController characterController = GetComponent<CharacterController>();
             _isWalking = true;
             npcAnimator.SetBool(walkingBool, true);
-
 
             // Precision distance check
             while (Vector3.Distance(transform.position, target.position) > 0.15f)
@@ -231,7 +269,6 @@ namespace MountainRescue.Dialogue
 
                 yield return null;
             }
-
 
             // Snap to final and wait a tiny buffer for animator to catch up
             transform.position = new Vector3(target.position.x, transform.position.y, target.position.z);

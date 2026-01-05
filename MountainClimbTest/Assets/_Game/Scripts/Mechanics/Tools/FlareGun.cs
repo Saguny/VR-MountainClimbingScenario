@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR.Interaction.Toolkit;
-using UnityEngine.XR.Interaction.Toolkit.Interactables; // XRI 3.x
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 namespace Game.Mechanics.Tools
 {
@@ -14,21 +14,16 @@ namespace Game.Mechanics.Tools
     public class FlareGun : MonoBehaviour
     {
         [Header("Requirements")]
-        [Tooltip("The Rescue Target/Objective.")]
         [SerializeField] private Transform objectiveTarget;
-
-        [Tooltip("Max distance (meters) to allow firing.")]
         [SerializeField] private float requiredRange = 1.5f;
-
-        [Tooltip("Reference to your existing Sensor Suite.")]
         [SerializeField] private PlayerSensorSuite sensorSuite;
-
-        [Tooltip("Max allowed inclination (e.g. 10 degrees). Set to match your sensor's output scale.")]
         [SerializeField] private float maxLevelDeviation = 10.0f;
 
         [Header("Feedback")]
-        [SerializeField] private TMP_Text warningSubtitle; // Drag your World Space Text here
+        [SerializeField] private TMP_Text warningSubtitle;
         [SerializeField] private float warningDuration = 3.0f;
+        [SerializeField] private AudioClip warningSound;
+        [SerializeField] private AudioSource warningAudioSource; // Dedicated source for warnings
 
         [Header("Projectile")]
         [SerializeField] private GameObject flareProjectilePrefab;
@@ -42,14 +37,15 @@ namespace Game.Mechanics.Tools
         [SerializeField] private string nextSceneName = "EndScene";
 
         private XRGrabInteractable _interactable;
-        private AudioSource _audioSource;
+        private AudioSource _mainAudioSource; // Renamed for clarity
         private bool _hasFired = false;
         private Coroutine _warningCoroutine;
 
         private void Awake()
         {
             _interactable = GetComponent<XRGrabInteractable>();
-            _audioSource = GetComponent<AudioSource>();
+            _mainAudioSource = GetComponent<AudioSource>();
+
             if (warningSubtitle != null) warningSubtitle.gameObject.SetActive(false);
         }
 
@@ -73,29 +69,19 @@ namespace Game.Mechanics.Tools
         {
             reason = "";
 
-            // 1. Proximity Check
             if (objectiveTarget != null)
             {
                 float dist = Vector3.Distance(transform.position, objectiveTarget.position);
                 if (dist > requiredRange)
                 {
-                    reason = $"I need to save this for when I reach the victim";
+                    reason = $"I need to save this until I reach the victim";
                     return false;
                 }
             }
 
-            // 2. Level/Stability Check
             if (sensorSuite != null)
             {
-                // NOTE: Replace 'VerticalInclination' with the exact property name from your PlayerSensorSuite
-                // Example: float currentLevel = sensorSuite.VerticalInclination;
-                // For now, we assume 0 is perfect level.
-
-                float currentLevel = 0f; // placeholder
-
-                // If you implemented IVerticalGuidanceProvider, you might cast it:
-                // var guidance = sensorSuite as IVerticalGuidanceProvider;
-                // if (guidance != null) currentLevel = guidance.GetVerticalDeviation();
+                float currentLevel = 0f;
 
                 if (Mathf.Abs(currentLevel) > maxLevelDeviation)
                 {
@@ -109,6 +95,11 @@ namespace Game.Mechanics.Tools
 
         private void ShowWarning(string message)
         {
+            if (warningSound != null && warningAudioSource != null)
+            {
+                warningAudioSource.PlayOneShot(warningSound);
+            }
+
             if (warningSubtitle == null) return;
 
             if (_warningCoroutine != null) StopCoroutine(_warningCoroutine);
@@ -120,7 +111,6 @@ namespace Game.Mechanics.Tools
             warningSubtitle.text = message;
             warningSubtitle.gameObject.SetActive(true);
 
-            // Optional: Make text face player immediately
             if (Camera.main != null)
             {
                 warningSubtitle.transform.rotation = Quaternion.LookRotation(warningSubtitle.transform.position - Camera.main.transform.position);
@@ -134,12 +124,10 @@ namespace Game.Mechanics.Tools
         {
             _hasFired = true;
             if (warningSubtitle != null) warningSubtitle.gameObject.SetActive(false);
-            if (fireSound) _audioSource.PlayOneShot(fireSound);
+            if (fireSound) _mainAudioSource.PlayOneShot(fireSound);
 
-            // Spawn Projectile
             if (flareProjectilePrefab != null && firePoint != null)
             {
-                // Spawn independent of gun rotation so we can force it up
                 GameObject flare = Instantiate(flareProjectilePrefab, firePoint.position, Quaternion.identity);
                 var flareScript = flare.GetComponent<FlareProjectile>();
                 if (flareScript != null) flareScript.Launch();
@@ -152,12 +140,11 @@ namespace Game.Mechanics.Tools
         {
             yield return new WaitForSeconds(rescueDelay);
 
-            if (rescueHelicopterSound) _audioSource.PlayOneShot(rescueHelicopterSound);
+            if (rescueHelicopterSound) _mainAudioSource.PlayOneShot(rescueHelicopterSound);
 
             if (headsetFader != null)
             {
-                // Assuming standard FadeIn/FadeOut naming. Adjust if your method is named differently.
-                headsetFader.FadeIn(); // Fading to black usually means "Fade In" the black overlay
+                headsetFader.FadeIn();
                 yield return new WaitForSeconds(2.0f);
             }
 
