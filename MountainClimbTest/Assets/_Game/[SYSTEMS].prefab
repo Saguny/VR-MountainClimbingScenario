@@ -6163,6 +6163,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 3862034659300196701, guid: 5e66527dd5a7fc045840b30ba8b51500, type: 3}
+    - {fileID: 2331116550021060565, guid: 5e66527dd5a7fc045840b30ba8b51500, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -6573,7 +6574,7 @@ PrefabInstance:
       objectReference: {fileID: 4435832672226832180}
     - target: {fileID: 5079684373459266067, guid: 22b7c01bddccde849a9b08e12bce3ed4, type: 3}
       propertyPath: seaLevelPressureHPa
-      value: 600
+      value: 490
       objectReference: {fileID: 0}
     - target: {fileID: 5137728507380999164, guid: 22b7c01bddccde849a9b08e12bce3ed4, type: 3}
       propertyPath: m_InteractionManager
@@ -7140,6 +7141,10 @@ PrefabInstance:
       value: Tool_Mask
       objectReference: {fileID: 0}
     - target: {fileID: 6860385063632545278, guid: 0f0ea7c6eb407f04b9c228495c65d7fd, type: 3}
+      propertyPath: playerHead
+      value: 
+      objectReference: {fileID: 20855113953941338}
+    - target: {fileID: 6860385063632545278, guid: 0f0ea7c6eb407f04b9c228495c65d7fd, type: 3}
       propertyPath: gaugeNeedle
       value: 
       objectReference: {fileID: 1703339929679432045}
@@ -7155,11 +7160,40 @@ PrefabInstance:
       propertyPath: warningDisplay
       value: 
       objectReference: {fileID: 7134074716859137439}
+    - target: {fileID: 6860385063632545278, guid: 0f0ea7c6eb407f04b9c228495c65d7fd, type: 3}
+      propertyPath: focusInput.m_UseReference
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6860385063632545278, guid: 0f0ea7c6eb407f04b9c228495c65d7fd, type: 3}
+      propertyPath: focusInput.m_Action.m_Name
+      value: Focus Input
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6741148089233991707, guid: 0f0ea7c6eb407f04b9c228495c65d7fd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4351488307041898766}
   m_SourcePrefab: {fileID: 100100000, guid: 0f0ea7c6eb407f04b9c228495c65d7fd, type: 3}
+--- !u!1 &2181020848753005114 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6741148089233991707, guid: 0f0ea7c6eb407f04b9c228495c65d7fd, type: 3}
+  m_PrefabInstance: {fileID: 4884668988430006817}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4351488307041898766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2181020848753005114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03b03daec89569046bd8870bd3020062, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HandPoseInfo
+  PoseID: 4
 --- !u!4 &5952304610474253116 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1248342695085105437, guid: 0f0ea7c6eb407f04b9c228495c65d7fd, type: 3}

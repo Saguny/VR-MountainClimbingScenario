@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
-using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using UnityEngine.XR.Interaction.Toolkit.Interactables; // Use .Interactables for XRI 3.x
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 public class OxygenTank : MonoBehaviour
@@ -12,117 +12,128 @@ public class OxygenTank : MonoBehaviour
     public BreathManager breathManager;
     public Transform gaugeNeedle;
     public TextMeshProUGUI warningDisplay;
-    public Animator handAnimator;
+    public Animator handAnimator; // Kept to preserve your references
+
+    [Header("New Interaction Settings")]
+    [Tooltip("Assign the Main Camera (Head) here.")]
+    public Transform playerHead;
+
+    [Tooltip("How close (in meters) the mask must be to the head.")]
+    public float mouthDistanceThreshold = 0.25f;
 
     [Header("Input")]
-    public InputActionProperty useTankAction;
+    [Tooltip("Bind this to Left Hand Interaction -> Secondary Button (Y Button)")]
+    public InputActionProperty focusInput;
 
-    [Header("Oxygen Settings")]
-    public float currentTankFuel = 100f;
-    public float usageCost = 5f;
-    public string emptyTankMessage = "O2 TANK EMPTY";
-
-    [Header("Needle Rotation Constraints")]
+    [Header("Gauge Constraints (Preserved)")]
     private const float MAX_Z = 156f;
     private const float MIN_Z = -141f;
     private const float FIXED_X = -56.522f;
     private const float FIXED_Y = -14.503f;
 
+    // State
     private XRGrabInteractable _grabInteractable;
-    private IXRInteractor _socketInteractor;
-    private bool _isGrabbed = false;
+    private bool _isHeld = false;
 
     private void Awake()
     {
         _grabInteractable = GetComponent<XRGrabInteractable>();
+
+        // Auto-find player head if not assigned manually
+        if (playerHead == null && Camera.main != null)
+        {
+            playerHead = Camera.main.transform;
+        }
     }
 
     private void OnEnable()
     {
-        _grabInteractable.selectEntered.AddListener(OnSelectEntered);
-        _grabInteractable.selectExited.AddListener(OnSelectExited);
+        if (_grabInteractable != null)
+        {
+            _grabInteractable.selectEntered.AddListener(OnGrab);
+            _grabInteractable.selectExited.AddListener(OnRelease);
+        }
+
+        if (focusInput.action != null)
+            focusInput.action.Enable();
     }
 
     private void OnDisable()
     {
-        _grabInteractable.selectEntered.RemoveListener(OnSelectEntered);
-        _grabInteractable.selectExited.RemoveListener(OnSelectExited);
-    }
+        if (_grabInteractable != null)
+        {
+            _grabInteractable.selectEntered.RemoveListener(OnGrab);
+            _grabInteractable.selectExited.RemoveListener(OnRelease);
+        }
 
-    private void OnSelectEntered(SelectEnterEventArgs args)
-    {
-        if (args.interactorObject is XRSocketInteractor)
-        {
-            _socketInteractor = args.interactorObject;
-            _isGrabbed = false;
-        }
-        else
-        {
-            _isGrabbed = true;
-        }
-    }
-
-    private void OnSelectExited(SelectExitEventArgs args)
-    {
-        if (args.interactorObject is not XRSocketInteractor)
-        {
-            _isGrabbed = false;
-            StopOxygenEffects();
-        }
+        if (focusInput.action != null)
+            focusInput.action.Disable();
     }
 
     private void Update()
     {
-        if (_isGrabbed && _socketInteractor != null)
-        {
-            transform.position = _socketInteractor.transform.position;
-            transform.rotation = _socketInteractor.transform.rotation;
-        }
-
-        bool isAPressed = useTankAction.action.ReadValue<float>() > 0.1f;
-
-        if (_isGrabbed && isAPressed)
-        {
-            HandleOxygenUsage();
-        }
-        else
-        {
-            StopOxygenEffects();
-        }
-
+        HandleOxygenLogic();
         UpdateGauge();
     }
 
-    private void HandleOxygenUsage()
+    private void HandleOxygenLogic()
     {
-        bool inThinAir = breathManager.sensorSuite.GetPressureHPa() < breathManager.thinAirThreshold;
+        if (breathManager == null) return;
 
-        if (currentTankFuel > 0 && inThinAir)
+        // 1. Must be held in hand (not in a socket)
+        if (!_isHeld)
         {
-            currentTankFuel = Mathf.Max(0, currentTankFuel - (usageCost * Time.deltaTime));
+            StopOxygenEffects();
+            return;
+        }
 
-            // Set variables so BreathManager allows Focus to happen
-            breathManager.hasOxygenTank = true;
-            breathManager.currentTankFuel = currentTankFuel; // Sync fuel to manager
+        // 2. Must be pressing Y Button
+        bool isPressed = focusInput.action != null && focusInput.action.IsPressed();
+        if (!isPressed)
+        {
+            StopOxygenEffects();
+            return;
+        }
 
+        // 3. Must be near mouth
+        if (!IsNearMouth())
+        {
+            StopOxygenEffects();
+            return;
+        }
+
+        // --- SUCCESS CONDITION ---
+
+        // Check if we actually have fuel
+        if (breathManager.currentTankFuel > 0)
+        {
+            // Consume fuel (BreathManager handles the subtraction via UseOxygenTank)
+            breathManager.UseOxygenTank();
+
+            // Enable Focus (Regenerates Stamina)
             breathManager.SetFocusState(true);
+
+            // Clear warning if valid
+            if (warningDisplay != null) warningDisplay.text = "";
         }
         else
         {
+            // Fuel Empty
             StopOxygenEffects();
+            if (warningDisplay != null) warningDisplay.text = "O2 TANK EMPTY";
         }
-
-        if (currentTankFuel <= 0 && warningDisplay != null)
-            warningDisplay.text = emptyTankMessage;
     }
 
     private void StopOxygenEffects()
     {
-        // Fix: Nur deaktivieren, wenn der Tank tatsächlich gerade benutzt wurde!
+        if (breathManager == null) return;
+
+        // Only reset if specifically currently using this tank
         if (breathManager.hasOxygenTank)
         {
             breathManager.hasOxygenTank = false;
 
+            // Also stop focusing if we were focusing
             if (breathManager.isFocusing)
             {
                 breathManager.SetFocusState(false);
@@ -130,11 +141,55 @@ public class OxygenTank : MonoBehaviour
         }
     }
 
+    private bool IsNearMouth()
+    {
+        if (playerHead == null) return false;
+        return Vector3.Distance(transform.position, playerHead.position) <= mouthDistanceThreshold;
+    }
+
+    // --- Interaction Events ---
+
+    private void OnGrab(SelectEnterEventArgs args)
+    {
+        // Check if we grabbed it with a hand, not a socket (belt)
+        if (args.interactorObject is not XRSocketInteractor)
+        {
+            _isHeld = true;
+        }
+    }
+
+    private void OnRelease(SelectExitEventArgs args)
+    {
+        // When dropped or placed in socket
+        if (args.interactorObject is not XRSocketInteractor)
+        {
+            _isHeld = false;
+            StopOxygenEffects();
+        }
+    }
+
+    // --- Visuals ---
+
     private void UpdateGauge()
     {
-        if (gaugeNeedle == null) return;
-        float fuelPercent = currentTankFuel / 100f;
+        if (gaugeNeedle == null || breathManager == null) return;
+
+        // Use current fuel from BreathManager
+        float fuelPercent = breathManager.currentTankFuel / 100f;
+
+        // Use your specific constraint values
         float targetZ = Mathf.Lerp(MIN_Z, MAX_Z, fuelPercent);
+
         gaugeNeedle.localRotation = Quaternion.Euler(FIXED_X, FIXED_Y, targetZ);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        // Visualize the mouth distance in Editor
+        if (playerHead != null)
+        {
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawWireSphere(playerHead.position, mouthDistanceThreshold);
+        }
     }
 }
