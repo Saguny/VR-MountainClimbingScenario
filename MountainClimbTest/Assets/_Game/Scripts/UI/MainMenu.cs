@@ -8,8 +8,6 @@ public class MainMenu : MonoBehaviour
     public GameObject optionsPanel;
 
     public GameObject audioPanel;
-    public GameObject graphicsPanel;
-    public GameObject controlsPanel;
 
     [SerializeField] private string gameSceneName = "Game";
 
@@ -23,6 +21,7 @@ public class MainMenu : MonoBehaviour
     public void OpenOptions()
     {
         mainMenuPanel.SetActive(false);
+        CloseAllSubOptions();
         optionsPanel.SetActive(true);
     }
 
@@ -42,25 +41,15 @@ public class MainMenu : MonoBehaviour
     public void OpenAudio()
     {
         CloseAllSubOptions();
+        Debug.Log("OpenAudio gedrückt");
+        Debug.Log(audioPanel.name);
         audioPanel.SetActive(true);
-    }
-
-    public void OpenGraphics()
-    {
-        CloseAllSubOptions();
-        graphicsPanel.SetActive(true);
-    }
-
-    public void OpenControls()
-    {
-        CloseAllSubOptions();
-        controlsPanel.SetActive(true);
     }
 
     private void CloseAllSubOptions()
     {
+        Debug.Log("Close all Suboptions");
         audioPanel.SetActive(false);
-        graphicsPanel.SetActive(false);
-        controlsPanel.SetActive(false);
+        optionsPanel.SetActive(false);
     }
 }
