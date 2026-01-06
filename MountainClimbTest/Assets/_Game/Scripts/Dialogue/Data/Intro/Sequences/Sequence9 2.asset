@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f1b3db8d0d47d324b9890da89b5c1f45, type: 3}
-  m_Name: Sequence11
+  m_Name: Sequence9 2
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Dialogue.DialogueSequence
   lines: []
   talkingBool: isWalking
   moveToPosition: 1
   waypointName: Waypoint2
-  moveSpeed: 4
+  moveSpeed: 6
   talkWhileWalking: 0
   onStartAction: 0
   onEndAction: 0
   advancesStory: 0
-  nextSequence: {fileID: 11400000, guid: dfc695dafc5d9a344876be60bca316bb, type: 2}
+  nextSequence: {fileID: 11400000, guid: 4eded8d554960554dad579fff5fa7de5, type: 2}

@@ -55,5 +55,5 @@ MonoBehaviour:
   talkWhileWalking: 0
   onStartAction: 0
   onEndAction: 0
-  advancesStory: 1
+  advancesStory: 0
   nextSequence: {fileID: 11400000, guid: 3f74d8bb10d1e1241986bcab746316d8, type: 2}
