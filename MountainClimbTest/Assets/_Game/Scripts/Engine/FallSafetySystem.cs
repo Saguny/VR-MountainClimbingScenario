@@ -127,6 +127,9 @@ namespace MountainRescue.Systems.Safety
 
         private IEnumerator ConcussionRespawnRoutine()
         {
+
+            if (MountainRescue.Systems.Session.GameSessionManager.Instance != null)
+                MountainRescue.Systems.Session.GameSessionManager.Instance.RegisterDeath();
             _currentState = SafetyState.Respawning;
             playerController.enabled = false;
 
