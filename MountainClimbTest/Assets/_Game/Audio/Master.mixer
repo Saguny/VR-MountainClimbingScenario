@@ -149,15 +149,21 @@ AudioMixerController:
   m_UpdateMode: 0
   m_ExposedParameters:
   - guid: f9ae188d365fe53438d5b0c8f7e90740
-    name: AmbienceVol
+    name: AmbienceVolume
   - guid: 0c2850205d2d7c548988b6973ca0b6ee
     name: AmbienceLowPass
+  - guid: c5141dc3cd2a6464b800c2ddd67dbfde
+    name: DialogueVolume
+  - guid: 4e36e1a274db3134d9292eaa45270fa9
+    name: MasterVolume
   - guid: 658ed78aecc60e640babd5a576151f69
     name: MasterLowPass
   - guid: 8f55087145d086a4fa33da40b0a1eb25
-    name: MusicVol
+    name: MusicVolume
   - guid: 67893901d4b55e34aba6424a5d818337
     name: MusicLowPass
+  - guid: c19ce7f865d66a047ba577b10a3987b0
+    name: SFXVolume
   m_AudioMixerGroupViews:
   - guids:
     - 13b999f24f4d6db4fb2b221d71de9d97
