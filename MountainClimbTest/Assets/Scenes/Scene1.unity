@@ -8105,53 +8105,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7629982036232995754, guid: 644707cafc4c65d41831273952053ff4, type: 3}
   m_PrefabInstance: {fileID: 823717671}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &829778784
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 829778786}
-  - component: {fileID: 829778785}
-  m_Layer: 0
-  m_Name: '- - - Audio Context - - -'
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &829778785
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 829778784}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dc834e7bd9ee1e94286e8ee20e018494, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Engine.SceneAudioSetup
-  sceneMusic: {fileID: 8300000, guid: 01069b11760bd0a4ab1749b7920b4692, type: 3}
-  sceneAmbience: {fileID: 0}
-  crossfade: 1
---- !u!4 &829778786
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 829778784}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 123.15836, y: 24.78918, z: -24.8408}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &831329110
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -20283,7 +20236,6 @@ SceneRoots:
   m_Roots:
   - {fileID: 1193366379}
   - {fileID: 179709350}
-  - {fileID: 829778786}
   - {fileID: 420317451}
   - {fileID: 379494720}
   - {fileID: 1507165251}
