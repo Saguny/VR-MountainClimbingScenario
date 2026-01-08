@@ -67,25 +67,30 @@ public class GlovePoseController : MonoBehaviour
     {
         if (isLockedToStone && currentTargetAttach != null)
         {
-            // 1. Basis-Werte vom Anker holen
             Vector3 targetPos = currentTargetAttach.position;
             Quaternion targetRot = currentTargetAttach.rotation;
 
             if (isLeftHand)
             {
-                // 2. Spiegel-Logik (Invertierung von Y und Z für die Symmetrie)
-                targetRot = new Quaternion(targetRot.x, -targetRot.y, -targetRot.z, targetRot.w);
+                // 1. Position Offset: Use InverseTransformPoint logic or simply mirror the local offset
+                // We use the right-hand offset but flip the X coordinate for the left hand symmetry
+                Vector3 mirroredOffset = new Vector3(-positionOffset.x, positionOffset.y, positionOffset.z);
+                targetPos = currentTargetAttach.TransformPoint(mirroredOffset);
 
-                // 3. Offset-Korrektur (Lokal zum Ziel-Anker)
-                // Wir wenden den Positions-Offset im lokalen Raum des Ankers an,
-                // damit "Links" auch wirklich "Links" bleibt, egal wie der Stein gedreht ist.
-                targetPos += currentTargetAttach.TransformDirection(positionOffset);
+                // 2. Rotation Mirroring:
+                // To mirror a rotation: reflect the Forward and Up vectors
+                Vector3 forward = currentTargetAttach.forward;
+                Vector3 up = currentTargetAttach.up;
 
-                // Rotationsoffset hinzufügen (z.B. falls die Hand noch leicht schräg ist)
+                // Reflect the vectors across the local plane of the hand
+                // This prevents the 180-degree flip when the parent is rotated
+                Vector3 mirroredForward = Vector3.Reflect(forward, currentTargetAttach.right);
+                targetRot = Quaternion.LookRotation(mirroredForward, up);
+
+                // 3. Apply the manual fine-tuning rotation offset
                 targetRot *= Quaternion.Euler(rotationOffset);
             }
 
-            // 4. Finale Zuweisung
             handVisualMesh.position = targetPos;
             handVisualMesh.rotation = targetRot;
         }

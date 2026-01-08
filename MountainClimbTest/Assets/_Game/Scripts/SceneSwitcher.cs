@@ -50,50 +50,27 @@ namespace MountainRescue.Engine
 
         private IEnumerator LoadSceneRoutine(string sceneName, string spawnPointName)
         {
-            // 1. Fade Out
-            if (fader != null)
-                yield return StartCoroutine(fader.FadeOut());
+            if (fader != null) yield return StartCoroutine(fader.FadeOut()); //
 
-            // UI Cleanup
-            if (subtitleText != null)
-            {
-                subtitleText.text = string.Empty;
-                subtitleText.gameObject.SetActive(false);
-            }
+            AsyncOperation op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single); //
+            while (!op.isDone) yield return null; //
 
-            // 2. Szene laden
-            AsyncOperation op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
-            while (!op.isDone)
-                yield return null;
-
-            // Warten bis alles initialisiert ist
+            // Wait 2 frames for PhysX to settle the new scene geometry
+            yield return new WaitForFixedUpdate();
             yield return new WaitForFixedUpdate();
 
-            // 3. Terrain Fix
-            TerrainPhysicsFix();
+            TerrainPhysicsFix(); //
 
-            // 4. Spieler positionieren (WICHTIG: CC kurz aus, sonst glitched es)
-            PositionPlayer(spawnPointName);
+            // Position the player
+            PositionPlayer(spawnPointName); //
+
+            // Crucial: Sync AFTER enabling the CC again to bake it into the new position
             Physics.SyncTransforms();
 
-            // 5. Komponenten resetten (damit sie die neue Umgebung checken)
-            if (bodyTransformer != null)
-            {
-                bodyTransformer.enabled = false;
-                yield return null;
-                bodyTransformer.enabled = true;
-            }
+            // Reset providers
+            if (bodyTransformer != null) { bodyTransformer.enabled = false; yield return null; bodyTransformer.enabled = true; } //
 
-            if (dynamicMoveProvider != null)
-            {
-                dynamicMoveProvider.enabled = false;
-                yield return null;
-                dynamicMoveProvider.enabled = true;
-            }
-
-            // 6. Fade In
-            if (fader != null)
-                yield return StartCoroutine(fader.FadeIn());
+            if (fader != null) yield return StartCoroutine(fader.FadeIn()); //
         }
 
         private void TerrainPhysicsFix()

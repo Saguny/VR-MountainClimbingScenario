@@ -5650,7 +5650,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5035678e060a9854ba125dc4e5695cbd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Systems.Safety.FallSafetySystem
-  fatalFallDistance: 2
+  fatalFallDistance: 5
   groundScanRange: 0.6
   safeGroundMask:
     serializedVersion: 2
@@ -5996,8 +5996,8 @@ MonoBehaviour:
   globalAmbienceSource: {fileID: 1602187532631656250}
   musicSource: {fileID: 7552884615736384410}
   mixer: {fileID: 24100000, guid: 88ac86fa8916bea4790d3ee5e171a19d, type: 2}
-  musicExposedParam: MusicVol
-  ambienceExposedParam: AmbienceVol
+  musicExposedParam: MusicVolume
+  ambienceExposedParam: AmbienceVolume
 --- !u!1 &8512266463654613471
 GameObject:
   m_ObjectHideFlags: 0
@@ -7160,7 +7160,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3838007654956943070, guid: 22b7c01bddccde849a9b08e12bce3ed4, type: 3}
       propertyPath: rotationOffset.y
-      value: 180
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4070201400272728797, guid: 22b7c01bddccde849a9b08e12bce3ed4, type: 3}
       propertyPath: m_Layer

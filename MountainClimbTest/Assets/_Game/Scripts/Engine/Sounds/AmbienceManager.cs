@@ -12,6 +12,9 @@ namespace MountainRescue.Engine
         [SerializeField] private AudioSource globalAmbienceSource;
         [SerializeField] private AudioSource musicSource;
 
+        [Header("Settings")]
+        [SerializeField] private float defaultFadeDuration = 2.0f;
+
         [Header("Mixer Settings")]
         [SerializeField] private AudioMixer mixer;
         [SerializeField] private string musicExposedParam = "MusicVol";
@@ -24,7 +27,7 @@ namespace MountainRescue.Engine
             if (Instance == null)
             {
                 Instance = this;
-                
+                DontDestroyOnLoad(gameObject); // Ensure this persists across scenes
             }
             else
             {
@@ -34,39 +37,47 @@ namespace MountainRescue.Engine
 
         public void PlayAmbience(AudioClip clip, bool fade = true)
         {
-            if (globalAmbienceSource.clip == clip) return;
+            // If the clip is already playing, don't restart it
+            if (globalAmbienceSource.clip == clip && globalAmbienceSource.isPlaying) return;
 
             if (fade)
             {
                 if (ambienceFadeCoroutine != null) StopCoroutine(ambienceFadeCoroutine);
-                ambienceFadeCoroutine = StartCoroutine(FadeToNewAmbience(clip));
+                ambienceFadeCoroutine = StartCoroutine(FadeToNewAmbience(clip, defaultFadeDuration));
             }
             else
             {
                 globalAmbienceSource.clip = clip;
                 globalAmbienceSource.loop = true;
+                globalAmbienceSource.volume = 1.0f; // Ensure volume is up if not fading
                 globalAmbienceSource.Play();
             }
         }
 
-        private IEnumerator FadeToNewAmbience(AudioClip newClip, float duration = 1.5f)
+        private IEnumerator FadeToNewAmbience(AudioClip newClip, float duration)
         {
-            float startVolume = globalAmbienceSource.volume;
+            float startVolume = globalAmbienceSource.isPlaying ? globalAmbienceSource.volume : 1.0f;
 
-            for (float t = 0; t < duration / 2; t += Time.deltaTime)
+            // Fade Out
+            if (globalAmbienceSource.isPlaying)
             {
-                globalAmbienceSource.volume = Mathf.Lerp(startVolume, 0, t / (duration / 2));
-                yield return null;
+                for (float t = 0; t < duration / 2; t += Time.deltaTime)
+                {
+                    globalAmbienceSource.volume = Mathf.Lerp(startVolume, 0, t / (duration / 2));
+                    yield return null;
+                }
             }
 
-            globalAmbienceSource.volume = 0;
             globalAmbienceSource.Stop();
             globalAmbienceSource.clip = newClip;
+            globalAmbienceSource.volume = 0;
 
             if (newClip != null)
             {
                 globalAmbienceSource.Play();
+                globalAmbienceSource.loop = true;
 
+                // Fade In
                 for (float t = 0; t < duration / 2; t += Time.deltaTime)
                 {
                     globalAmbienceSource.volume = Mathf.Lerp(0, startVolume, t / (duration / 2));
@@ -79,27 +90,20 @@ namespace MountainRescue.Engine
         public void PlayMusic(AudioClip clip, bool loop = true)
         {
             if (musicSource.clip == clip && musicSource.isPlaying) return;
-
             musicSource.clip = clip;
             musicSource.loop = loop;
             musicSource.Play();
         }
 
-        public void StopMusic()
-        {
-            musicSource.Stop();
-        }
+        public void StopMusic() => musicSource.Stop();
 
-        public void SetMusicVolume(float volume)
+        public void SetMusicVolume(float volume) => SetMixerVolume(musicExposedParam, volume);
+        public void SetAmbienceVolume(float volume) => SetMixerVolume(ambienceExposedParam, volume);
+
+        private void SetMixerVolume(string param, float volume)
         {
             float db = Mathf.Log10(Mathf.Clamp(volume, 0.0001f, 1f)) * 20;
-            mixer.SetFloat(musicExposedParam, db);
-        }
-
-        public void SetAmbienceVolume(float volume)
-        {
-            float db = Mathf.Log10(Mathf.Clamp(volume, 0.0001f, 1f)) * 20;
-            mixer.SetFloat(ambienceExposedParam, db);
+            mixer.SetFloat(param, db);
         }
     }
 }

@@ -29,12 +29,17 @@ namespace MountainRescue.Systems
             FindTargetInScene();
         }
 
+        // Inside RescueTargetManager.cs
         public void FindTargetInScene()
         {
             GameObject targetObj = GameObject.FindWithTag("RescueTarget");
             if (targetObj != null)
             {
-                currentTarget = targetObj.transform;
+                SetTarget(targetObj.transform);
+            }
+            else
+            {
+                currentTarget = null; // Clear target if none exists in the new scene
             }
         }
 

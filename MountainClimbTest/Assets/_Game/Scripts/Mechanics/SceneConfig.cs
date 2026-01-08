@@ -7,48 +7,63 @@ public class SceneMasterConfig : MonoBehaviour
     [Header("Audio")]
     public AudioClip sceneMusic;
     public AudioClip sceneAmbience;
+    public bool useCrossfade = true;
 
     [Header("Atmosphere")]
     public float seaLevelPressure = 1013.25f;
     public float snowRate = 50f;
+
+    [Header("Rescue Target")]
+    public Transform sceneTargetOverride;
 
     [Header("Y-Following")]
     public GameObject objectToFollowPlayer;
 
     void Start()
     {
-        // 1. Audio
+        // 1. Audio Crossfade
         if (AmbienceManager.Instance != null)
         {
-            if (sceneMusic != null) AmbienceManager.Instance.PlayMusic(sceneMusic);
-            if (sceneAmbience != null) AmbienceManager.Instance.PlayAmbience(sceneAmbience);
+            if (sceneMusic != null)
+                AmbienceManager.Instance.PlayMusic(sceneMusic);
+
+            // This will trigger the FadeToNewAmbience coroutine in the manager
+            AmbienceManager.Instance.PlayAmbience(sceneAmbience, useCrossfade);
         }
 
-        // 2. Player-Related (Snow & Pressure)
+        // 2. Rescue Target Setup
+        if (RescueTargetManager.Instance != null)
+        {
+            if (sceneTargetOverride != null)
+                RescueTargetManager.Instance.SetTarget(sceneTargetOverride);
+            else
+                RescueTargetManager.Instance.FindTargetInScene();
+        }
+
+        // 3. Player Systems
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
         {
-            // Set Snow
-            ParticleSystem ps = player.GetComponentInChildren<ParticleSystem>();
-            if (ps != null) { var em = ps.emission; em.rateOverTime = snowRate; }
-
-            // Set Pressure
-            PlayerSensorSuite sensor = player.GetComponentInChildren<PlayerSensorSuite>();
-            if (sensor != null) SetPrivateField(sensor, "seaLevelPressureHPa", seaLevelPressure);
-
-            // 3. Setup Follower
-            if (objectToFollowPlayer != null)
-            {
-                // Add the component if it's missing, or just update the reference
-                var f = objectToFollowPlayer.GetComponent<FollowPlayerY>() ?? objectToFollowPlayer.AddComponent<FollowPlayerY>();
-                // In your FollowPlayerY, you can make playerTransform public so we set it here
-            }
+            ApplyPlayerSettings(player);
         }
     }
 
-    private void SetPrivateField(PlayerSensorSuite target, string fieldName, float value)
+    private void ApplyPlayerSettings(GameObject player)
     {
-        var field = typeof(PlayerSensorSuite).GetField(fieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        if (field != null) field.SetValue(target, value);
+        // Snow
+        ParticleSystem ps = player.GetComponentInChildren<ParticleSystem>();
+        if (ps != null) { var em = ps.emission; em.rateOverTime = snowRate; }
+
+        // Pressure
+        PlayerSensorSuite sensor = player.GetComponentInChildren<PlayerSensorSuite>();
+        if (sensor != null) sensor.seaLevelPressureHPa = seaLevelPressure;
+
+        // Y-Follower
+        if (objectToFollowPlayer != null)
+        {
+            var f = objectToFollowPlayer.GetComponent<FollowPlayerY>() ?? objectToFollowPlayer.AddComponent<FollowPlayerY>();
+            // If FollowPlayerY has a target field, set it here:
+            // f.target = player.transform;
+        }
     }
 }
