@@ -3,8 +3,13 @@ using UnityEngine;
 public class FollowPlayerY : MonoBehaviour
 {
     private Transform playerTransform;
+
+    [Header("Settings")]
     public float followSpeed = 10f; // Optional smoothing
     public bool useSmoothing = false;
+
+    [Tooltip("Add to the player's Y height. Use negative values to track below the player (e.g. -2.0).")]
+    public float yOffset = 0f;
 
     void Start()
     {
@@ -20,7 +25,8 @@ public class FollowPlayerY : MonoBehaviour
     {
         if (playerTransform == null) return;
 
-        float targetY = playerTransform.position.y;
+        // Apply the offset here
+        float targetY = playerTransform.position.y + yOffset;
 
         if (useSmoothing)
         {

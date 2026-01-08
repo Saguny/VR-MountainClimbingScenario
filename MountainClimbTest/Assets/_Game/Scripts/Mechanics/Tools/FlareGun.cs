@@ -3,7 +3,7 @@ using MountainRescue.UI;
 using System.Collections;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using UnityEngine.SceneManagement; // Added for scene events
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
@@ -23,7 +23,7 @@ namespace Game.Mechanics.Tools
         [SerializeField] private TMP_Text warningSubtitle;
         [SerializeField] private float warningDuration = 3.0f;
         [SerializeField] private AudioClip warningSound;
-        [SerializeField] private AudioSource warningAudioSource; // Dedicated source for warnings
+        [SerializeField] private AudioSource warningAudioSource;
 
         [Header("Projectile")]
         [SerializeField] private GameObject flareProjectilePrefab;
@@ -37,7 +37,7 @@ namespace Game.Mechanics.Tools
         [SerializeField] private string nextSceneName = "EndScene";
 
         private XRGrabInteractable _interactable;
-        private AudioSource _mainAudioSource; // Renamed for clarity
+        private AudioSource _mainAudioSource;
         private bool _hasFired = false;
         private Coroutine _warningCoroutine;
 
@@ -47,6 +47,39 @@ namespace Game.Mechanics.Tools
             _mainAudioSource = GetComponent<AudioSource>();
 
             if (warningSubtitle != null) warningSubtitle.gameObject.SetActive(false);
+
+            // 1. Listen for Scene Changes (since this object is likely DDOL)
+            SceneManager.sceneLoaded += OnSceneLoaded;
+
+            // 2. Initial Search (in case we start in the scene with the target)
+            FindRescueTarget();
+        }
+
+        private void OnDestroy()
+        {
+            // Always unsubscribe from static events to prevent memory leaks
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        // Called automatically by Unity whenever a new scene finishes loading
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            FindRescueTarget();
+        }
+
+        private void FindRescueTarget()
+        {
+            // Search for the object by tag in the currently active scene
+            GameObject targetObj = GameObject.FindGameObjectWithTag("RescueTarget");
+            if (targetObj != null)
+            {
+                objectiveTarget = targetObj.transform;
+            }
+            else
+            {
+                // Optional: set to null if no target exists in this scene (e.g. main menu)
+                objectiveTarget = null;
+            }
         }
 
         private void OnEnable() => _interactable.activated.AddListener(OnTriggerPulled);
@@ -69,6 +102,7 @@ namespace Game.Mechanics.Tools
         {
             reason = "";
 
+            // 1. Range Check (Now uses the auto-found target)
             if (objectiveTarget != null)
             {
                 float dist = Vector3.Distance(transform.position, objectiveTarget.position);
@@ -78,10 +112,19 @@ namespace Game.Mechanics.Tools
                     return false;
                 }
             }
+            else
+            {
+                // Optional: Block firing if no target is found in the scene?
+                // reason = "No valid rescue target found nearby.";
+                // return false; 
+            }
 
+            // 2. Sensor Check
             if (sensorSuite != null)
             {
-                float currentLevel = 0f;
+                // Note: You previously had 'currentLevel = 0f' here. 
+                // Assuming you want to read the actual sensor data:
+                float currentLevel = 0f; // TODO: Hook this up to sensorSuite.GetLevel() or similar if implemented
 
                 if (Mathf.Abs(currentLevel) > maxLevelDeviation)
                 {
@@ -111,6 +154,7 @@ namespace Game.Mechanics.Tools
             warningSubtitle.text = message;
             warningSubtitle.gameObject.SetActive(true);
 
+            // Make the text face the player
             if (Camera.main != null)
             {
                 warningSubtitle.transform.rotation = Quaternion.LookRotation(warningSubtitle.transform.position - Camera.main.transform.position);
@@ -129,8 +173,8 @@ namespace Game.Mechanics.Tools
             if (flareProjectilePrefab != null && firePoint != null)
             {
                 GameObject flare = Instantiate(flareProjectilePrefab, firePoint.position, Quaternion.identity);
-                var flareScript = flare.GetComponent<FlareProjectile>();
-                if (flareScript != null) flareScript.Launch();
+                var flareScript = flare.GetComponent<FlareProjectile>(); // Assuming you have this script
+                if (flareScript != null) flareScript.Launch(); // Assuming Launch() method exists
             }
 
             StartCoroutine(RescueSequenceRoutine());
