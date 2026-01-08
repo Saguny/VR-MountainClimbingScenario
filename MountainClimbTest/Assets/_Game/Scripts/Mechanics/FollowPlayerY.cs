@@ -16,7 +16,7 @@ public class FollowPlayerY : MonoBehaviour
         }
     }
 
-    void Update()
+    void LateUpdate()
     {
         if (playerTransform == null) return;
 

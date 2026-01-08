@@ -1,47 +1,54 @@
 using UnityEngine;
-using MountainRescue.Systems; // Required to see PlayerSensorSuite
+using MountainRescue.Systems;
+using MountainRescue.Engine;
 
-public class SceneWeatherConfig : MonoBehaviour
+public class SceneMasterConfig : MonoBehaviour
 {
-    [Header("Atmospheric Settings")]
-    public float sceneSeaLevelPressure = 1013.25f;
+    [Header("Audio")]
+    public AudioClip sceneMusic;
+    public AudioClip sceneAmbience;
 
-    [Header("Snow Settings")]
-    public float snowEmissionRate = 50f;
+    [Header("Atmosphere")]
+    public float seaLevelPressure = 1013.25f;
+    public float snowRate = 50f;
+
+    [Header("Y-Following")]
+    public GameObject objectToFollowPlayer;
 
     void Start()
     {
-        // 1. Find the Player (assuming the DDOL player has the "Player" tag)
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        // 1. Audio
+        if (AmbienceManager.Instance != null)
+        {
+            if (sceneMusic != null) AmbienceManager.Instance.PlayMusic(sceneMusic);
+            if (sceneAmbience != null) AmbienceManager.Instance.PlayAmbience(sceneAmbience);
+        }
 
+        // 2. Player-Related (Snow & Pressure)
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
         {
-            // 2. Update the Sensor (Sea Level Pressure)
-            PlayerSensorSuite sensor = player.GetComponentInChildren<PlayerSensorSuite>();
-            if (sensor != null)
-            {
-                // Note: seaLevelPressureHPa must be public in your PlayerSensorSuite script
-                // or you can add a public method to change it.
-                SetPrivateField(sensor, "seaLevelPressureHPa", sceneSeaLevelPressure);
-                Debug.Log($"Scene Config: Set Pressure to {sceneSeaLevelPressure}");
-            }
-
-            // 3. Update the Snow Particle System
+            // Set Snow
             ParticleSystem ps = player.GetComponentInChildren<ParticleSystem>();
-            if (ps != null)
+            if (ps != null) { var em = ps.emission; em.rateOverTime = snowRate; }
+
+            // Set Pressure
+            PlayerSensorSuite sensor = player.GetComponentInChildren<PlayerSensorSuite>();
+            if (sensor != null) SetPrivateField(sensor, "seaLevelPressureHPa", seaLevelPressure);
+
+            // 3. Setup Follower
+            if (objectToFollowPlayer != null)
             {
-                var emission = ps.emission;
-                emission.rateOverTime = snowEmissionRate;
-                Debug.Log($"Scene Config: Set Snow to {snowEmissionRate}");
+                // Add the component if it's missing, or just update the reference
+                var f = objectToFollowPlayer.GetComponent<FollowPlayerY>() ?? objectToFollowPlayer.AddComponent<FollowPlayerY>();
+                // In your FollowPlayerY, you can make playerTransform public so we set it here
             }
         }
     }
 
-    // Helper if the variable is private (Alternative: Change variable to public in Sensor script)
     private void SetPrivateField(PlayerSensorSuite target, string fieldName, float value)
     {
-        var field = typeof(PlayerSensorSuite).GetField(fieldName,
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var field = typeof(PlayerSensorSuite).GetField(fieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         if (field != null) field.SetValue(target, value);
     }
 }
