@@ -18,7 +18,7 @@ namespace MountainRescue.Systems
         [SerializeField] private float verticalTolerance = 1.1f;
 
         [Header("Atmospherics")]
-        [SerializeField] private float seaLevelPressureHPa = 700f;
+        [SerializeField] public float seaLevelPressureHPa = 700f;
 
         private VerticalGuidanceState _lastState = VerticalGuidanceState.Neutral;
         public event System.Action<VerticalGuidanceState> OnStateChanged;
