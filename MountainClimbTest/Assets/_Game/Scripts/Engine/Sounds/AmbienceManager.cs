@@ -17,12 +17,14 @@ namespace MountainRescue.Engine
         [SerializeField] private string musicExposedParam = "MusicVol";
         [SerializeField] private string ambienceExposedParam = "AmbienceVol";
 
+        private Coroutine ambienceFadeCoroutine;
+
         private void Awake()
         {
             if (Instance == null)
             {
                 Instance = this;
-                
+                DontDestroyOnLoad(gameObject);
             }
             else
             {
@@ -30,18 +32,49 @@ namespace MountainRescue.Engine
             }
         }
 
-        // --- AMBIENCE LOGIC ---
-
         public void PlayAmbience(AudioClip clip, bool fade = true)
         {
             if (globalAmbienceSource.clip == clip) return;
 
-            globalAmbienceSource.clip = clip;
-            globalAmbienceSource.loop = true;
-            globalAmbienceSource.Play();
+            if (fade)
+            {
+                if (ambienceFadeCoroutine != null) StopCoroutine(ambienceFadeCoroutine);
+                ambienceFadeCoroutine = StartCoroutine(FadeToNewAmbience(clip));
+            }
+            else
+            {
+                globalAmbienceSource.clip = clip;
+                globalAmbienceSource.loop = true;
+                globalAmbienceSource.Play();
+            }
         }
 
-        // --- MUSIC LOGIC ---
+        private IEnumerator FadeToNewAmbience(AudioClip newClip, float duration = 1.5f)
+        {
+            float startVolume = globalAmbienceSource.volume;
+
+            for (float t = 0; t < duration / 2; t += Time.deltaTime)
+            {
+                globalAmbienceSource.volume = Mathf.Lerp(startVolume, 0, t / (duration / 2));
+                yield return null;
+            }
+
+            globalAmbienceSource.volume = 0;
+            globalAmbienceSource.Stop();
+            globalAmbienceSource.clip = newClip;
+
+            if (newClip != null)
+            {
+                globalAmbienceSource.Play();
+
+                for (float t = 0; t < duration / 2; t += Time.deltaTime)
+                {
+                    globalAmbienceSource.volume = Mathf.Lerp(0, startVolume, t / (duration / 2));
+                    yield return null;
+                }
+                globalAmbienceSource.volume = startVolume;
+            }
+        }
 
         public void PlayMusic(AudioClip clip, bool loop = true)
         {
@@ -56,8 +89,6 @@ namespace MountainRescue.Engine
         {
             musicSource.Stop();
         }
-
-        // --- VOLUME CONTROL (Using Mixer) ---
 
         public void SetMusicVolume(float volume)
         {
