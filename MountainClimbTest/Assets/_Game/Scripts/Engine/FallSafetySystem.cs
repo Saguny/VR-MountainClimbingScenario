@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 using System.Collections;
 using MountainRescue.Interfaces;
 using MountainRescue.UI;
+using MountainRescue.Systems; // [INTEGRATION] Added for ToolRespawner
 
 namespace MountainRescue.Systems.Safety
 {
@@ -41,6 +42,10 @@ namespace MountainRescue.Systems.Safety
         [SerializeField] private Transform headCamera;
         [SerializeField] private HeadsetFader screenFader;
         [SerializeField] private GameObject anchorSystem;
+
+        [Header("Inventory Safety")] // [INTEGRATION] New Header
+        [Tooltip("Reference to the system that resets lost tools.")]
+        [SerializeField] private ToolRespawner toolRespawner;
 
         [Header("Debug")]
         [SerializeField] private bool showDebugGizmos = true;
@@ -91,8 +96,6 @@ namespace MountainRescue.Systems.Safety
 
             // --- TELEPORT DETECTION ---
             // Detect if we moved an impossible distance in one frame (e.g., Scene Load 110m -> 0m)
-            // A realistic fall at terminal velocity (55m/s) covers ~0.9m per frame at 60fps.
-            // If we drop more than 4 meters in a single frame, it's definitely a teleport/reset.
             float frameDrop = _lastFrameY - headCamera.position.y;
 
             if (frameDrop > 4.0f)
@@ -283,6 +286,18 @@ namespace MountainRescue.Systems.Safety
                     playerController.transform.position = respawnLocation.position;
                     Physics.SyncTransforms();
                 }
+            }
+
+            // [INTEGRATION] Recover Lost Tools
+            // We call this immediately after teleporting so tools appear back on the belt instantly.
+            if (toolRespawner != null)
+            {
+                toolRespawner.RecoverDroppedTools();
+                if (verboseLogging) Debug.Log("[FallSafety] Tools recovered via ToolRespawner.");
+            }
+            else if (verboseLogging)
+            {
+                Debug.LogWarning("[FallSafety] ToolRespawner not assigned! Dropped tools were NOT recovered.");
             }
 
             // Recovery

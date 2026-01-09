@@ -13799,6 +13799,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
   m_Asset: {fileID: -944628639613478452, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   m_ActionId: 9693e25f-8a4f-4aed-842f-3961243c69a1
+--- !u!114 &1448916254
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1963763627610380055}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13d2de1d1ca18ac42ba7a739f323ef21, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Systems.ToolRespawner
+  toolsToRecover:
+  - name: IcePickR
+    item: {fileID: 1963763627610380064}
+    homeSlot: {fileID: 1963763627610380063}
+  - name: IcePickL
+    item: {fileID: 1963763627610380059}
+    homeSlot: {fileID: 1963763627610380060}
+  - name: FlareGun
+    item: {fileID: 1963763627610380062}
+    homeSlot: {fileID: 1963763627610380061}
+  - name: Mask
+    item: {fileID: 1963763627610380058}
+    homeSlot: {fileID: 1963763627610380057}
 --- !u!1001 &1458978850
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -23007,6 +23032,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: toolRespawner
+      value: 
+      objectReference: {fileID: 1448916254}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: respawnLocation
       value: 
       objectReference: {fileID: 1780934407}
@@ -23172,6 +23201,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1701640546099252741, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1963763627610380056}
+    - targetCorrespondingSourceObject: {fileID: 1701640546099252741, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1448916254}
   m_SourcePrefab: {fileID: 100100000, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
 --- !u!4 &1963763627610380053 stripped
 Transform:
@@ -23211,6 +23243,70 @@ CapsuleCollider:
   m_Height: 1.6
   m_Direction: 1
   m_Center: {x: 0, y: 1.03, z: 0}
+--- !u!4 &1963763627610380057 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5952304610474253116, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+  m_PrefabInstance: {fileID: 1963763627610380052}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1963763627610380058 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7214490946300520141, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+  m_PrefabInstance: {fileID: 1963763627610380052}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ad34abafad169848a38072baa96cdb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.XR.Interaction.Toolkit::UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable
+--- !u!114 &1963763627610380059 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1469604024954811283, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+  m_PrefabInstance: {fileID: 1963763627610380052}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ad34abafad169848a38072baa96cdb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.XR.Interaction.Toolkit::UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable
+--- !u!4 &1963763627610380060 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4251761406469714776, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+  m_PrefabInstance: {fileID: 1963763627610380052}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1963763627610380061 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2205694287440582937, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+  m_PrefabInstance: {fileID: 1963763627610380052}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1963763627610380062 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 9142874209869743508, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+  m_PrefabInstance: {fileID: 1963763627610380052}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ad34abafad169848a38072baa96cdb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.XR.Interaction.Toolkit::UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable
+--- !u!4 &1963763627610380063 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4066039204437113437, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+  m_PrefabInstance: {fileID: 1963763627610380052}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1963763627610380064 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5230566366613818201, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+  m_PrefabInstance: {fileID: 1963763627610380052}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ad34abafad169848a38072baa96cdb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.XR.Interaction.Toolkit::UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable
 --- !u!1001 &5770902524195315061
 PrefabInstance:
   m_ObjectHideFlags: 0
