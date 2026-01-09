@@ -4119,6 +4119,14 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2066426587320394197, guid: facd575bad643754fb1e2e6377d51f37, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 359caf9e7bc6352428bbd5c4a3fdf6e9, type: 2}
+    - target: {fileID: 2354600555965485492, guid: facd575bad643754fb1e2e6377d51f37, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2398016144134152846, guid: facd575bad643754fb1e2e6377d51f37, type: 3}
       propertyPath: sensorDataSource
       value: 
@@ -4174,6 +4182,10 @@ PrefabInstance:
     - target: {fileID: 4425539222084889166, guid: facd575bad643754fb1e2e6377d51f37, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 5968410416142389243, guid: facd575bad643754fb1e2e6377d51f37, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7221713122087316863, guid: facd575bad643754fb1e2e6377d51f37, type: 3}
       propertyPath: altText
@@ -12110,6 +12122,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6017898458184455319, guid: 88d5d7e29eb6eb84ba92760ebe33b0d5, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 359caf9e7bc6352428bbd5c4a3fdf6e9, type: 2}
     - target: {fileID: 6481001342713776392, guid: 88d5d7e29eb6eb84ba92760ebe33b0d5, type: 3}
       propertyPath: m_Camera
       value: 
