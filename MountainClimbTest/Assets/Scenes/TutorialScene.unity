@@ -1707,7 +1707,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38a52cbe135f8dc4bad799e963f3578b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Engine.SceneExitTrigger
-  targetScene: Scene3
+  targetScene: Scene1
   targetSpawnPointName: SpawnPoint
   requiredStoryStage: 2
 --- !u!65 &245710321
@@ -4117,7 +4117,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1181573592870526415, guid: facd575bad643754fb1e2e6377d51f37, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2398016144134152846, guid: facd575bad643754fb1e2e6377d51f37, type: 3}
       propertyPath: sensorDataSource
@@ -5358,7 +5358,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DialogueZoneTrigger
   npcController: {fileID: 910850969}
   sequenceToTrigger: {fileID: 11400000, guid: d0ddaece484466445be64c704731aa6d, type: 2}
-  requiredStoryStage: 2
+  requiredStoryStage: 1
   triggerOnlyOnce: 1
 --- !u!65 &818551252
 BoxCollider:
@@ -22927,6 +22927,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 10953969}
     - target: {fileID: 2088877816514486239, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: warningDisplay
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 2088877816514486239, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: maskInteractionPoint
       value: 
       objectReference: {fileID: 2136681607}
@@ -22994,6 +22998,26 @@ PrefabInstance:
       propertyPath: focusAction.m_Reference
       value: 
       objectReference: {fileID: 101864873}
+    - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: penaltyHeight
+      value: 120
+      objectReference: {fileID: 0}
+    - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: tankUsageCost
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: fallbackThinAirDrain
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: onStaminaEmpty.m_PersistentCalls.m_Calls.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: onStaminaEmpty.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 4447497608149130528, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: detachInput.m_Reference
       value: 
@@ -23036,15 +23060,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5733719328104410852, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: focusColor.b
-      value: 1
+      value: 0.047169805
       objectReference: {fileID: 0}
     - target: {fileID: 5733719328104410852, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: focusColor.g
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5733719328104410852, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: focusColor.r
-      value: 1
+      value: 0.00017134646
       objectReference: {fileID: 0}
     - target: {fileID: 5768800256340789020, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: m_IsActive
@@ -23074,6 +23098,30 @@ PrefabInstance:
       propertyPath: turnInput.m_Reference
       value: 
       objectReference: {fileID: 1336694180}
+    - target: {fileID: 7134074716859137439, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_fontSize
+      value: 19.12
+      objectReference: {fileID: 0}
+    - target: {fileID: 7134074716859137439, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: 353cb01cefd220346a9cca3b3bcb96e3, type: 2}
+    - target: {fileID: 7134074716859137439, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 19.12
+      objectReference: {fileID: 0}
+    - target: {fileID: 7134074716859137439, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -4622484925115851931, guid: 353cb01cefd220346a9cca3b3bcb96e3, type: 2}
+    - target: {fileID: 7134074716859137439, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_enableAutoSizing
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7134074716859137439, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_hasFontAssetChanged
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7328303845820664355, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: m_RightHandTurnInput.m_InputActionReference
       value: 
@@ -23086,6 +23134,10 @@ PrefabInstance:
       propertyPath: npcController
       value: 
       objectReference: {fileID: 910850969}
+    - target: {fileID: 8125081100299677057, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: transitionHoldTime
+      value: 5
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 2394584036699523686, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}

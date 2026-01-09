@@ -117,6 +117,7 @@ namespace MountainRescue.Dialogue
 
         private void SetSubtitleText(string text, bool active)
         {
+            Debug.Log($"[Subtitle Debug] Setting Text to: '{text}' | Active: {active} | Time: {Time.time}");
             if (subtitleTMP != null)
             {
                 subtitleTMP.gameObject.SetActive(active);
