@@ -23008,7 +23008,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: fallbackThinAirDrain
-      value: 0.5
+      value: 0.25
       objectReference: {fileID: 0}
     - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: onStaminaEmpty.m_PersistentCalls.m_Calls.Array.size
