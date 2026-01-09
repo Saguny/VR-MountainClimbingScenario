@@ -11,9 +11,10 @@ GameObject:
   - component: {fileID: 4884775527098237595}
   - component: {fileID: 1615581503742569932}
   - component: {fileID: 8518424244721496944}
-  - component: {fileID: 1983253501843130940}
+  - component: {fileID: 2555597930229464967}
   - component: {fileID: 1601282743635373871}
   - component: {fileID: 7754076850065739178}
+  - component: {fileID: 7025834932264888887}
   m_Layer: 0
   m_Name: Cylinder
   m_TagString: climbableObjects
@@ -94,8 +95,8 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &1983253501843130940
-CapsuleCollider:
+--- !u!65 &2555597930229464967
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -112,10 +113,8 @@ CapsuleCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5000001
-  m_Height: 2
-  m_Direction: 1
+  serializedVersion: 3
+  m_Size: {x: 1.0000001, y: 2, z: 1.0000002}
   m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
 --- !u!54 &1601282743635373871
 Rigidbody:
@@ -157,7 +156,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.XR.Interaction.Toolkit::UnityEngine.XR.Interaction.Toolkit.Locomotion.Climbing.ClimbInteractable
   m_InteractionManager: {fileID: 0}
-  m_Colliders: []
+  m_Colliders:
+  - {fileID: 2555597930229464967}
   m_InteractionLayers:
     m_Bits: 1
   m_DistanceCalculationMode: 1
@@ -230,6 +230,19 @@ MonoBehaviour:
       m_AllowFreeYMovement: 1
       m_AllowFreeZMovement: 1
     m_Variable: {fileID: 0}
+--- !u!114 &7025834932264888887
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 283768425532821696}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03b03daec89569046bd8870bd3020062, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HandPoseInfo
+  PoseID: 5
 --- !u!1001 &2334874620338046764
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -281,6 +294,10 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 15826068ed1f9854a8aea5ff35a32f20, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -5568371526223589888, guid: 15826068ed1f9854a8aea5ff35a32f20, type: 3}
+      propertyPath: m_TagString
+      value: climbableObjects
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 15826068ed1f9854a8aea5ff35a32f20, type: 3}
       propertyPath: m_Name

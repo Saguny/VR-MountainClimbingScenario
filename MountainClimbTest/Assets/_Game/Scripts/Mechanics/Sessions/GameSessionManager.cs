@@ -14,6 +14,11 @@ namespace MountainRescue.Systems.Session
         [Header("Live Data")]
         public float playTime;
         public int deathCount;
+
+        [Header("Victim Rescue Data")]
+        public float victimOxygenSupplied = 0f;
+        public float victimOxygenRequired = 50f;
+
         private bool isTracking = false;
 
         private void Awake()
@@ -24,7 +29,6 @@ namespace MountainRescue.Systems.Session
                 return;
             }
             Instance = this;
-            // Falls [SYSTEMS] noch kein DDOL hat, erzwingen wir es hier
             DontDestroyOnLoad(gameObject);
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
@@ -48,6 +52,7 @@ namespace MountainRescue.Systems.Session
             {
                 playTime = 0f;
                 deathCount = 0;
+                victimOxygenSupplied = 0f;
                 isTracking = false;
             }
             else if (scene.name == endSceneName || scene.name == "MainMenu")
@@ -65,11 +70,27 @@ namespace MountainRescue.Systems.Session
             if (isTracking) deathCount++;
         }
 
+        public void RegisterVictimOxygen(float amount)
+        {
+            if (isTracking)
+            {
+                victimOxygenSupplied += amount;
+            }
+        }
+
+        public bool IsVictimSaved()
+        {
+            return victimOxygenSupplied >= victimOxygenRequired;
+        }
+
         public (string rank, int score) GetFinalResults()
         {
             float timePenalty = playTime * 2f;
             int deathPenalty = deathCount * 500;
-            int finalScore = Mathf.Max(0, 10000 - (int)timePenalty - deathPenalty);
+
+            int rescueBonus = IsVictimSaved() ? 2000 : 0;
+
+            int finalScore = Mathf.Max(0, 10000 + rescueBonus - (int)timePenalty - deathPenalty);
 
             string rank = "C";
             if (finalScore > 9000) rank = "S";

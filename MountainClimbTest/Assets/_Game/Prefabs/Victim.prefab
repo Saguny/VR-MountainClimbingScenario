@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5451415268693167843
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7945204543659835826}
+  m_Layer: 0
+  m_Name: VictimHead
+  m_TagString: VictimHead
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7945204543659835826
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5451415268693167843}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.39788482, y: 0.5989613, z: 0.51912713, w: -0.46199572}
+  m_LocalPosition: {x: -0.01036, y: 0.00139, z: 0.00935}
+  m_LocalScale: {x: 0.045248866, y: 0.04524888, z: 0.04524887}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9152870200687154109}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7049276418990737183
 GameObject:
   m_ObjectHideFlags: 0
@@ -11,7 +42,7 @@ GameObject:
   - component: {fileID: 3046036120685813883}
   m_Layer: 0
   m_Name: Victim
-  m_TagString: Untagged
+  m_TagString: RescueTarget
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -26,8 +57,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 5.99102, y: -0, z: -2.40468}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1.3000001, y: 1.3, z: 1.3000001}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 3637107119369140983}
   m_Father: {fileID: 0}
@@ -54,7 +85,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ec6a4e6d55e9a44798c372c7af77e36, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -2.4030201
+      value: -2.483
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ec6a4e6d55e9a44798c372c7af77e36, type: 3}
       propertyPath: m_LocalPosition.y
@@ -62,7 +93,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ec6a4e6d55e9a44798c372c7af77e36, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2.40468
+      value: 2.405
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ec6a4e6d55e9a44798c372c7af77e36, type: 3}
       propertyPath: m_LocalRotation.w
@@ -374,7 +405,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 5401687522822622881, guid: 9ec6a4e6d55e9a44798c372c7af77e36, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7945204543659835826}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 9ec6a4e6d55e9a44798c372c7af77e36, type: 3}
       insertIndex: -1
@@ -412,3 +446,8 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!4 &9152870200687154109 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5401687522822622881, guid: 9ec6a4e6d55e9a44798c372c7af77e36, type: 3}
+  m_PrefabInstance: {fileID: 3887487027695312156}
+  m_PrefabAsset: {fileID: 0}

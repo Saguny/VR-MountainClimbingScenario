@@ -11,6 +11,8 @@ TagManager:
   - Snow
   - Stone
   - RescueTarget
+  - SpawnPoint
+  - VictimHead
   layers:
   - Default
   - TransparentFX

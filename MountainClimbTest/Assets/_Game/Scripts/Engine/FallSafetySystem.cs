@@ -1,5 +1,6 @@
 using UnityEngine;
-using UnityEngine.Audio; // Required for AudioMixer
+using UnityEngine.Audio;
+using UnityEngine.SceneManagement;
 using System.Collections;
 using MountainRescue.Interfaces;
 using MountainRescue.UI;
@@ -20,20 +21,15 @@ namespace MountainRescue.Systems.Safety
         [SerializeField] private AudioClip impactClip;
 
         [Header("Audio Mixer Settings")]
-        [Tooltip("Assign your MasterMixer here.")]
         [SerializeField] private AudioMixer targetMixer;
-
-        [Tooltip("Exposed Parameter name for Ambience.")]
         [SerializeField] private string ambienceLowPassParam = "AmbienceLowPass";
-
-        [Tooltip("Exposed Parameter name for Music.")]
         [SerializeField] private string musicLowPassParam = "MusicLowPass";
-
         [Space]
-        [SerializeField] private float concussedCutoffHz = 600f; // Muffled sound
-        [SerializeField] private float normalCutoffHz = 22000f;  // Clear sound
+        [SerializeField] private float concussedCutoffHz = 600f;
+        [SerializeField] private float normalCutoffHz = 22000f;
 
         [Header("Respawn Visuals")]
+        [Tooltip("Automatically updated on Scene Load.")]
         [SerializeField] private Transform respawnLocation;
         [SerializeField] private float whiteFlashDuration = 0.2f;
         [SerializeField] private float fadeToBlackDuration = 2.0f;
@@ -53,6 +49,20 @@ namespace MountainRescue.Systems.Safety
         private SafetyState _currentState = SafetyState.Grounded;
         private IAnchorStateProvider _anchorSystem;
         private float _apexAltitude;
+        private float _lastFrameY; // Tracks position to detect teleports
+
+        private void OnEnable() => SceneManager.sceneLoaded += OnSceneLoaded;
+        private void OnDisable() => SceneManager.sceneLoaded -= OnSceneLoaded;
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            // 1. Reset everything immediately
+            StopAllCoroutines();
+            ResetSafetyState();
+
+            // 2. Try to find the Spawn Point (Start a search routine in case it's not ready yet)
+            StartCoroutine(FindSpawnPointRoutine());
+        }
 
         private void Start()
         {
@@ -62,13 +72,38 @@ namespace MountainRescue.Systems.Safety
             if (headCamera == null && Camera.main != null) headCamera = Camera.main.transform;
             if (anchorSystem != null) _anchorSystem = anchorSystem.GetComponent<IAnchorStateProvider>();
 
-            // Ensure sound starts clear (resetting any stuck state from previous runs)
             SetMixerFreq(normalCutoffHz);
+
+            // Init altitude tracking
+            if (headCamera)
+            {
+                _apexAltitude = headCamera.position.y;
+                _lastFrameY = headCamera.position.y;
+            }
+
+            // Initial spawn point check
+            if (respawnLocation == null) StartCoroutine(FindSpawnPointRoutine());
         }
 
         private void Update()
         {
-            if (playerController == null) return;
+            if (playerController == null || headCamera == null) return;
+
+            // --- TELEPORT DETECTION ---
+            // Detect if we moved an impossible distance in one frame (e.g., Scene Load 110m -> 0m)
+            // A realistic fall at terminal velocity (55m/s) covers ~0.9m per frame at 60fps.
+            // If we drop more than 4 meters in a single frame, it's definitely a teleport/reset.
+            float frameDrop = _lastFrameY - headCamera.position.y;
+
+            if (frameDrop > 4.0f)
+            {
+                if (verboseLogging) Debug.LogWarning($"[FallSafety] Teleport detected (Drop: {frameDrop:F2}m in 1 frame). Resetting fall logic.");
+                ResetSafetyState();
+                _lastFrameY = headCamera.position.y;
+                return; // Skip the rest of this frame
+            }
+            _lastFrameY = headCamera.position.y;
+            // --------------------------
 
             switch (_currentState)
             {
@@ -81,17 +116,53 @@ namespace MountainRescue.Systems.Safety
             }
         }
 
+        /// <summary>
+        /// Resets the system to a safe, grounded state. Clears effects and fall memory.
+        /// </summary>
+        private void ResetSafetyState()
+        {
+            _currentState = SafetyState.Grounded;
+
+            if (headCamera != null)
+            {
+                _apexAltitude = headCamera.position.y;
+                _lastFrameY = headCamera.position.y;
+            }
+
+            if (playerController != null) playerController.enabled = true;
+            SetMixerFreq(normalCutoffHz);
+
+            if (screenFader != null) screenFader.SetColor(Color.clear);
+        }
+
         private void StartFall()
         {
-            if (verboseLogging) Debug.Log($"[FallSafety] Ground lost. FALL STARTED at altitude: {headCamera.position.y:F2}");
+            // Only log if not just initializing
+            if (Time.time > 1.0f && verboseLogging)
+                Debug.Log($"[FallSafety] Ground lost. FALL STARTED at altitude: {headCamera.position.y:F2}");
+
             _currentState = SafetyState.Falling;
             _apexAltitude = headCamera.position.y;
         }
 
         private void UpdateFallingState()
         {
+            // 1. Update Apex
             if (headCamera.position.y > _apexAltitude) _apexAltitude = headCamera.position.y;
 
+            float currentDrop = _apexAltitude - headCamera.position.y;
+            bool isAnchored = _anchorSystem != null && _anchorSystem.IsAnchored();
+
+            // 2. MID-AIR DEATH CHECK
+            // If falling > 5m with no rope, die immediately (skipping ground check)
+            if (!isAnchored && currentDrop > fatalFallDistance)
+            {
+                if (verboseLogging) Debug.Log($"[FallSafety] FATAL FALL LIMIT EXCEEDED MID-AIR. Drop: {currentDrop:F2}m");
+                StartCoroutine(ConcussionRespawnRoutine());
+                return;
+            }
+
+            // 3. Ground Impact Check
             if (CheckGroundContact()) HandleImpact();
         }
 
@@ -125,30 +196,59 @@ namespace MountainRescue.Systems.Safety
             return Physics.SphereCast(origin, playerController.radius * 0.8f, Vector3.down, out _, 0.1f + groundScanRange, safeGroundMask);
         }
 
+        // --- SPAWN POINT SEARCH LOGIC ---
+        private IEnumerator FindSpawnPointRoutine()
+        {
+            // Try immediately
+            if (TryFindSpawnPoint()) yield break;
+
+            // Retry for a few frames (sometimes objects initialize slightly later)
+            for (int i = 0; i < 5; i++)
+            {
+                yield return null; // Wait one frame
+                if (TryFindSpawnPoint()) yield break;
+            }
+
+            if (verboseLogging) Debug.LogError("[FallSafety] COULD NOT FIND SPAWN POINT! Ensure you have an object tagged 'Respawn' or named 'SpawnPoint'.");
+        }
+
+        private bool TryFindSpawnPoint()
+        {
+            // 1. Try Tag
+            GameObject spawnObj = GameObject.FindGameObjectWithTag("Respawn");
+
+            // 2. Try Name "SpawnPoint"
+            if (spawnObj == null) spawnObj = GameObject.Find("SpawnPoint");
+
+            // 3. Try Name "PlayerSpawn"
+            if (spawnObj == null) spawnObj = GameObject.Find("PlayerSpawn");
+
+            if (spawnObj != null)
+            {
+                respawnLocation = spawnObj.transform;
+                if (verboseLogging) Debug.Log($"[FallSafety] Spawn Point Found: {spawnObj.name}");
+                return true;
+            }
+            return false;
+        }
+
         private IEnumerator ConcussionRespawnRoutine()
         {
-
             if (MountainRescue.Systems.Session.GameSessionManager.Instance != null)
                 MountainRescue.Systems.Session.GameSessionManager.Instance.RegisterDeath();
+
             _currentState = SafetyState.Respawning;
             playerController.enabled = false;
 
-            // 1. IMPACT FX (Audio + Mixer)
+            // Audio FX
             if (audioSource && impactClip) audioSource.PlayOneShot(impactClip);
-
-            // Muffle BOTH Ambience and Music immediately
             SetMixerFreq(concussedCutoffHz);
 
-            // 2. FLASH WHITE
+            // Visual FX
             if (screenFader)
             {
                 screenFader.SetColor(new Color(1, 1, 1, 0.6f));
                 yield return screenFader.FadeToColor(Color.white, whiteFlashDuration);
-            }
-
-            // 3. FADE TO BLACK
-            if (screenFader)
-            {
                 yield return screenFader.FadeToColor(Color.black, fadeToBlackDuration);
             }
             else
@@ -156,32 +256,38 @@ namespace MountainRescue.Systems.Safety
                 yield return new WaitForSeconds(fadeToBlackDuration);
             }
 
-            // 4. TELEPORT
             yield return new WaitForSeconds(blackoutDuration);
 
+            // Execute Teleport
             if (respawnLocation != null)
             {
                 Transform rigTransform = playerController.transform;
                 rigTransform.position = respawnLocation.position;
 
-                float headY = headCamera.localEulerAngles.y;
-                float targetY = respawnLocation.eulerAngles.y;
-                rigTransform.rotation = Quaternion.Euler(0, targetY - headY, 0);
+                // Match rotation
+                if (headCamera != null)
+                {
+                    float headY = headCamera.localEulerAngles.y;
+                    float targetY = respawnLocation.eulerAngles.y;
+                    rigTransform.rotation = Quaternion.Euler(0, targetY - headY, 0);
+                }
 
                 Physics.SyncTransforms();
             }
-            else if (verboseLogging)
+            else
             {
-                Debug.LogError("[FallSafety] No Respawn Point Assigned!");
+                // Last ditch effort to find it if we somehow missed it earlier
+                TryFindSpawnPoint();
+                if (respawnLocation != null)
+                {
+                    playerController.transform.position = respawnLocation.position;
+                    Physics.SyncTransforms();
+                }
             }
 
-            // 5. RECOVERY
-            // Restore audio clarity to both groups
+            // Recovery
             SetMixerFreq(normalCutoffHz);
-
-            playerController.enabled = true;
-            _currentState = SafetyState.Grounded;
-            _apexAltitude = headCamera.position.y;
+            ResetSafetyState(); // Ensures Apex is reset to new position
 
             if (screenFader) yield return screenFader.FadeIn(recoveryFadeSpeed);
         }
@@ -190,10 +296,7 @@ namespace MountainRescue.Systems.Safety
         {
             if (targetMixer != null)
             {
-                // Set Ambience
                 targetMixer.SetFloat(ambienceLowPassParam, freq);
-
-                // Set Music
                 targetMixer.SetFloat(musicLowPassParam, freq);
             }
         }

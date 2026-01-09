@@ -15,6 +15,29 @@ namespace MountainRescue.UI
         [SerializeField] private TextMeshProUGUI timeText;
         [SerializeField] private TextMeshProUGUI deathText;
         [SerializeField] private TextMeshProUGUI countdownText;
+        [SerializeField] private TextMeshProUGUI victimResultText;
+
+        [Header("Text Formats")]
+        [Tooltip("Use {0} for the rank value.")]
+        [SerializeField] private string rankFormat = "{0}";
+
+        [Tooltip("Use {0} for the score value.")]
+        [SerializeField] private string scoreFormat = "{0}";
+
+        [Tooltip("Use {0} for minutes and {1} for seconds.")]
+        [SerializeField] private string timeFormat = "TIME\n{0:00}:{1:00}";
+
+        [Tooltip("Use {0} for the death count.")]
+        [SerializeField] private string deathFormat = "{0}";
+
+        [Tooltip("Use {0} for the remaining seconds.")]
+        [SerializeField] private string countdownFormat = "Menu in: {0}s";
+
+        [Header("Victim Feedback")]
+        [SerializeField] private string victimSuccessMessage = "Success! You saved the victim.";
+        [SerializeField] private string victimFailMessage = "Failed! Victim didn't receive enough oxygen.";
+        [SerializeField] private Color successColor = Color.green;
+        [SerializeField] private Color failColor = Color.red;
 
         [Header("Settings")]
         [SerializeField] private float waitTime = 15f;
@@ -22,7 +45,6 @@ namespace MountainRescue.UI
 
         private void Start()
         {
-            // Bewegung auf 0 setzen
             var moveProvider = FindFirstObjectByType<DynamicMoveProvider>();
             if (moveProvider != null) moveProvider.moveSpeed = 0f;
 
@@ -30,13 +52,23 @@ namespace MountainRescue.UI
             {
                 var results = GameSessionManager.Instance.GetFinalResults();
 
-                if (rankText) rankText.text = results.rank;
-                if (scoreText) scoreText.text = results.score.ToString();
+                if (rankText) rankText.text = string.Format(rankFormat, results.rank);
+                if (scoreText) scoreText.text = string.Format(scoreFormat, results.score);
 
                 float t = GameSessionManager.Instance.playTime;
-                if (timeText) timeText.text = string.Format("{0:00}:{1:00}", Mathf.Floor(t / 60), Mathf.Floor(t % 60));
+                if (timeText)
+                {
+                    timeText.text = string.Format(timeFormat, Mathf.Floor(t / 60), Mathf.Floor(t % 60));
+                }
 
-                if (deathText) deathText.text = GameSessionManager.Instance.deathCount.ToString();
+                if (deathText) deathText.text = string.Format(deathFormat, GameSessionManager.Instance.deathCount);
+
+                if (victimResultText)
+                {
+                    bool saved = GameSessionManager.Instance.IsVictimSaved();
+                    victimResultText.text = saved ? victimSuccessMessage : victimFailMessage;
+                    victimResultText.color = saved ? successColor : failColor;
+                }
             }
 
             StartCoroutine(ReturnToMenuRoutine());
@@ -47,12 +79,11 @@ namespace MountainRescue.UI
             float remaining = waitTime;
             while (remaining > 0)
             {
-                if (countdownText) countdownText.text = "Menu in: " + Mathf.CeilToInt(remaining) + "s";
+                if (countdownText) countdownText.text = string.Format(countdownFormat, Mathf.CeilToInt(remaining));
                 yield return new WaitForSeconds(1f);
                 remaining -= 1f;
             }
 
-            // Zerstört das gesamte [SYSTEMS] GameObject inklusive aller Kinder und Manager
             if (GameSessionManager.Instance != null)
             {
                 GameSessionManager.Instance.DestroySystems();
