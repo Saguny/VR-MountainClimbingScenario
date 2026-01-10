@@ -711,6 +711,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cube.003
       objectReference: {fileID: 0}
+    - target: {fileID: 8455471694290287095, guid: e50e64e176cb75644add0aae30bede00, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 3cf05092c7d2da9448dc64cfcf78b6e2, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -9305,6 +9309,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cube.006 (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 6675293703839680324, guid: 0a341b9693390bc4fb796595438ba2d8, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 3cf05092c7d2da9448dc64cfcf78b6e2, type: 2}
     - target: {fileID: 6930377286977895418, guid: 0a341b9693390bc4fb796595438ba2d8, type: 3}
       propertyPath: m_LocalScale.x
       value: 50
@@ -19217,6 +19225,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cube.006
       objectReference: {fileID: 0}
+    - target: {fileID: 6675293703839680324, guid: 0a341b9693390bc4fb796595438ba2d8, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 3cf05092c7d2da9448dc64cfcf78b6e2, type: 2}
     - target: {fileID: 6930377286977895418, guid: 0a341b9693390bc4fb796595438ba2d8, type: 3}
       propertyPath: m_LocalScale.x
       value: 40
@@ -19720,6 +19732,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 895866991}
     m_Modifications:
+    - target: {fileID: 1142273785768985711, guid: 36bc7d1ceb179b444992bb1080861531, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 3cf05092c7d2da9448dc64cfcf78b6e2, type: 2}
     - target: {fileID: 2181423792705577955, guid: 36bc7d1ceb179b444992bb1080861531, type: 3}
       propertyPath: m_Name
       value: Cube.004
