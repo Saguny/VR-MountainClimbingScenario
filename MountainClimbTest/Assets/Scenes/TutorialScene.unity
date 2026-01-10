@@ -22974,7 +22974,15 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 368703953446406362, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_Mass
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 368703953446406362, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: m_UseGravity
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 368703953446406362, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_Interpolate
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 368703953446406362, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
@@ -23027,6 +23035,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 735016397952077792, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1469604024954811283, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_AttachEaseInTime
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1469604024954811283, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
@@ -23282,6 +23294,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 832039724}
     - target: {fileID: 5230566366613818201, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_AttachEaseInTime
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5230566366613818201, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: m_UseDynamicAttach
       value: 0
       objectReference: {fileID: 0}
@@ -23400,6 +23416,14 @@ PrefabInstance:
     - target: {fileID: 5952304610474253116, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0.1375
+      objectReference: {fileID: 0}
+    - target: {fileID: 6480195237250707472, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_Mass
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 6480195237250707472, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_Interpolate
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6867450878148980307, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: target
