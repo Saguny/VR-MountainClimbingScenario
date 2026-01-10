@@ -303,6 +303,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cube.006
       objectReference: {fileID: 0}
+    - target: {fileID: 6675293703839680324, guid: 0a341b9693390bc4fb796595438ba2d8, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 30e23d663b69fe5428253e3d932bb77a, type: 2}
     - target: {fileID: 6930377286977895418, guid: 0a341b9693390bc4fb796595438ba2d8, type: 3}
       propertyPath: m_LocalScale.x
       value: 30

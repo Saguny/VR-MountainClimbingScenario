@@ -299,6 +299,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 6283570426434520072}
     m_Modifications:
+    - target: {fileID: 787083717465814068, guid: 7c0615eb0e9331040963411655f9e29a, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 30e23d663b69fe5428253e3d932bb77a, type: 2}
     - target: {fileID: 4809930563088040626, guid: 7c0615eb0e9331040963411655f9e29a, type: 3}
       propertyPath: m_Name
       value: Cube.008
