@@ -1,5 +1,6 @@
 ﻿using MountainRescue.Dialogue;
 using MountainRescue.UI;
+using MountainRescue.Systems; // Added for ToolRespawner
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -13,19 +14,22 @@ namespace MountainRescue.Engine
     {
         public static SceneSwitcher Instance;
 
-        [Header("references")]
+        [Header("References")]
         [SerializeField] private HeadsetFader fader;
         [SerializeField] private GameObject xrOrigin;
         [SerializeField] private XRBodyTransformer bodyTransformer;
         [SerializeField] private MonoBehaviour dynamicMoveProvider;
 
-        [Header("story settings")]
+        // Added Reference to ToolRespawner
+        [SerializeField] private ToolRespawner toolRespawner;
+
+        [Header("Story Settings")]
         [SerializeField] private NPCDialogueController npcController;
 
-        [Header("transition settings")]
+        [Header("Transition Settings")]
         [SerializeField] private float transitionHoldTime = 3.0f;
 
-        [Header("ui cleanup")]
+        [Header("UI Cleanup")]
         [SerializeField] private TextMeshProUGUI subtitleText;
 
         private void Awake()
@@ -38,6 +42,15 @@ namespace MountainRescue.Engine
             else
             {
                 Destroy(gameObject);
+            }
+        }
+
+        private void Start()
+        {
+            // Auto-assign if missing, usually found on the same Systems object
+            if (toolRespawner == null)
+            {
+                toolRespawner = GetComponentInChildren<ToolRespawner>();
             }
         }
 
@@ -56,6 +69,13 @@ namespace MountainRescue.Engine
             Debug.Log($"[SceneSwitcher] Step 1: Starting transition to {sceneName}");
 
             if (fader != null) yield return StartCoroutine(fader.FadeOut());
+
+            // Disable Locomotion during load to prevent falling/glitching
+            if (bodyTransformer != null) bodyTransformer.enabled = false;
+            if (dynamicMoveProvider != null) dynamicMoveProvider.enabled = false;
+
+            // Clear UI
+            if (subtitleText != null) subtitleText.text = "";
 
             Debug.Log("[SceneSwitcher] Step 2: Loading Scene Async...");
             AsyncOperation op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
@@ -82,9 +102,6 @@ namespace MountainRescue.Engine
             }
 
             Debug.Log($"[SceneSwitcher] Step 6: SpawnPoint found at {spawnPoint.transform.position}. Starting Ground Check...");
-
-            if (bodyTransformer != null) bodyTransformer.enabled = false;
-            if (dynamicMoveProvider != null) dynamicMoveProvider.enabled = false;
 
             CharacterController cc = xrOrigin.GetComponent<CharacterController>();
             if (cc != null) cc.enabled = false;
@@ -130,8 +147,18 @@ namespace MountainRescue.Engine
                 cc.Move(Vector3.zero);
             }
 
+            // Re-enable locomotion
             if (bodyTransformer != null) bodyTransformer.enabled = true;
             if (dynamicMoveProvider != null) dynamicMoveProvider.enabled = true;
+
+            // NEW STEP: Recover Tools
+            // We call this NOW, after the player has been safely moved to the new scene position.
+            // This ensures tools snap to the belt's new location, not the old scene's location.
+            if (toolRespawner != null)
+            {
+                Debug.Log("[SceneSwitcher] Respawning Tools to Belt...");
+                toolRespawner.RecoverDroppedTools();
+            }
 
             yield return new WaitForSeconds(transitionHoldTime);
 

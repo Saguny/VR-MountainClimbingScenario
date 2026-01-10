@@ -160,7 +160,7 @@ MonoBehaviour:
   - {fileID: 2555597930229464967}
   m_InteractionLayers:
     m_Bits: 1
-  m_DistanceCalculationMode: 1
+  m_DistanceCalculationMode: 2
   m_SelectMode: 1
   m_FocusMode: 1
   m_CustomReticle: {fileID: 0}
@@ -221,7 +221,7 @@ MonoBehaviour:
   m_ClimbProvider: {fileID: 0}
   m_ClimbTransform: {fileID: 4884775527098237595}
   m_FilterInteractionByDistance: 1
-  m_MaxInteractionDistance: 0.1
+  m_MaxInteractionDistance: 0.3
   m_ClimbAssistanceTeleportVolume: {fileID: 0}
   m_ClimbSettingsOverride:
     m_UseConstant: 0

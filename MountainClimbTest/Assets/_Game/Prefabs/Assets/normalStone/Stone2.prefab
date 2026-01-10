@@ -236,8 +236,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.1913884, y: 2.0339706, z: 1.817717}
-  m_Center: {x: 0.017693467, y: -0.31289083, z: -0.40113664}
+  m_Size: {x: 1.5878587, y: 2.0339706, z: 2.1953895}
+  m_Center: {x: 0.02788134, y: -0.31289083, z: -0.3683866}
 --- !u!54 &8696114465229262863
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -278,10 +278,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.XR.Interaction.Toolkit::UnityEngine.XR.Interaction.Toolkit.Locomotion.Climbing.ClimbInteractable
   m_InteractionManager: {fileID: 0}
-  m_Colliders: []
+  m_Colliders:
+  - {fileID: 6085599423068104774}
   m_InteractionLayers:
     m_Bits: 1
-  m_DistanceCalculationMode: 1
+  m_DistanceCalculationMode: 2
   m_SelectMode: 1
   m_FocusMode: 1
   m_CustomReticle: {fileID: 0}

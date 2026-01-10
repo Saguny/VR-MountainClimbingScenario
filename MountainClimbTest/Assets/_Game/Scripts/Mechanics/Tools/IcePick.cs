@@ -7,7 +7,7 @@ using UnityEngine.XR.Interaction.Toolkit.Locomotion;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 using Unity.XR.CoreUtils;
 using System.Collections;
-using MountainRescue.Systems; // Dein Namespace für BreathManager/SafetyManager
+using MountainRescue.Systems;
 
 [RequireComponent(typeof(XRGrabInteractable))]
 [RequireComponent(typeof(Rigidbody))]
@@ -32,7 +32,7 @@ public class IcePick : LocomotionProvider
     public Collider[] allColliders;
     public CharacterController characterController;
     public DynamicMoveProvider moveProvider;
-    public BreathManager breathManager; // Optional
+    public BreathManager breathManager;
 
     private XRGrabInteractable interactable;
     private Rigidbody rb;
@@ -41,8 +41,6 @@ public class IcePick : LocomotionProvider
     private IXRSelectInteractor currentInteractor;
     private Vector3 previousHandLocalPosition;
     private float nextStickTime = 0f;
-
-    // Wir speichern den Original-Speed, um ihn wiederherzustellen
     private float defaultMoveSpeed = 0f;
 
     protected override void Awake()
@@ -78,18 +76,41 @@ public class IcePick : LocomotionProvider
         if (otherTriggerInput.action != null) otherTriggerInput.action.Disable();
     }
 
+    /// <summary>
+    /// PUBLIC API: Called by ToolRespawner to ensure the tool is clean 
+    /// before being teleported back to the belt.
+    /// </summary>
+    public void ForceReset()
+    {
+        // 1. Logically unstick
+        if (isStuck)
+        {
+            Unstick();
+        }
+
+        // 2. Force Physics Reset
+        // FIX: Must set isKinematic to FALSE before modifying velocity to avoid Unity errors
+        if (rb != null)
+        {
+            rb.isKinematic = false;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
+        // 3. Reset internal cooldowns
+        nextStickTime = 0f;
+    }
+
     private void OnGrab(SelectEnterEventArgs args) { currentInteractor = args.interactorObject; Unstick(); }
     private void OnRelease(SelectExitEventArgs args) { currentInteractor = null; Unstick(); }
 
     void OnCollisionEnter(Collision collision)
     {
         if (isStuck || currentInteractor == null || Time.time < nextStickTime) return;
-        if (IsBothTriggersHeld()) return; // Sicherheits-Check (beide Trigger)
+        if (IsBothTriggersHeld()) return;
 
-        // Tag Check
         if (!collision.gameObject.CompareTag(iceTag) && !collision.gameObject.CompareTag("climbableObjects")) return;
 
-        // Velocity Check
         foreach (ContactPoint contact in collision.contacts)
         {
             if (contact.thisCollider == tipCollider && collision.relativeVelocity.magnitude > hitVelocityThreshold)
@@ -116,25 +137,20 @@ public class IcePick : LocomotionProvider
         isStuck = true;
         activePicks++;
 
-        // Physik des Pickaxe einfrieren
         rb.isKinematic = true;
         interactable.movementType = XRBaseInteractable.MovementType.Kinematic;
         interactable.trackPosition = false;
         interactable.trackRotation = false;
 
-        // "Eindringen" simulieren
         transform.position += transform.forward * penetrationDepth;
 
-        // Haptic Feedback
         if (currentInteractor is XRBaseInputInteractor input) input.SendHapticImpulse(0.7f, 0.15f);
 
-        // Kletter-Logik starten
         if (currentInteractor != null && xrOrigin != null)
             previousHandLocalPosition = xrOrigin.transform.InverseTransformPoint(currentInteractor.transform.position);
 
         if (activePicks == 1)
         {
-            // Wir sagen dem XR System: "Wir klettern jetzt"
             BeginLocomotion();
         }
 
@@ -149,7 +165,6 @@ public class IcePick : LocomotionProvider
         activePicks--;
         if (activePicks < 0) activePicks = 0;
 
-        // Physik wieder freigeben
         rb.isKinematic = false;
         rb.linearVelocity = Vector3.zero;
 
@@ -164,13 +179,9 @@ public class IcePick : LocomotionProvider
 
         if (activePicks == 0)
         {
-            // Klettern beendet
             EndLocomotion();
-
-            // WICHTIG: Erzwinge Physik-Update, damit CC sofort Kollisionen prüft
             Physics.SyncTransforms();
 
-            // Safety Check rufen (falls vorhanden)
             if (PlayerSafetyManager.Instance != null)
                 PlayerSafetyManager.Instance.RequestGroundSafetyCheck();
         }
@@ -182,15 +193,12 @@ public class IcePick : LocomotionProvider
 
         if (moveProvider != null)
         {
-            // WICHTIG: Niemals 'enabled = false' setzen!
-            // Nur Gravity und Speed steuern.
             moveProvider.useGravity = !isClimbing;
             moveProvider.moveSpeed = isClimbing ? 0 : defaultMoveSpeed;
         }
 
         if (characterController != null)
         {
-            // Wenn wir klettern, ignorieren wir Schritte, sonst "stolpert" man die Wand hoch
             characterController.stepOffset = isClimbing ? 0 : 0.3f;
         }
     }
@@ -214,14 +222,12 @@ public class IcePick : LocomotionProvider
 
     void Update()
     {
-        // Detach Input Check
         if (isStuck && detachInput.action != null && detachInput.action.WasPressedThisFrame())
         {
             Unstick();
             return;
         }
 
-        // Kletter-Bewegung
         if (isStuck && currentInteractor != null && xrOrigin != null)
         {
             Vector3 currentHandLocalPos = xrOrigin.transform.InverseTransformPoint(currentInteractor.transform.position);
@@ -229,7 +235,6 @@ public class IcePick : LocomotionProvider
             Vector3 worldMovement = xrOrigin.transform.TransformDirection(localMovement);
             Vector3 climbMove = -worldMovement;
 
-            // Wir bewegen den CC. Da Gravity aus ist, schwebt er.
             if (characterController != null && characterController.enabled)
             {
                 characterController.Move(climbMove);

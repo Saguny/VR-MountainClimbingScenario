@@ -90,8 +90,8 @@ namespace MountainRescue.Systems.Safety
         {
             if (playerController == null || headCamera == null) return;
 
+            // Detect external teleports (e.g., debug tools) to prevent accidental death
             float frameDrop = _lastFrameY - headCamera.position.y;
-
             if (frameDrop > 4.0f)
             {
                 if (verboseLogging) Debug.LogWarning($"[FallSafety] Teleport detected (Drop: {frameDrop:F2}m in 1 frame). Resetting fall logic.");
@@ -131,6 +131,7 @@ namespace MountainRescue.Systems.Safety
 
         private void StartFall()
         {
+            // Ignore tiny hops or initial scene load settling
             if (Time.time > 1.0f && verboseLogging)
                 Debug.Log($"[FallSafety] Ground lost. FALL STARTED at altitude: {headCamera.position.y:F2}");
 
@@ -142,8 +143,10 @@ namespace MountainRescue.Systems.Safety
         {
             if (headCamera.position.y > _apexAltitude) _apexAltitude = headCamera.position.y;
 
+            // Check if falling too fast
             float verticalSpeed = (headCamera.position.y - _lastFrameY) / Time.deltaTime;
 
+            // If we moved UP significantly, reset apex
             if (verticalSpeed > -controlledDescentSpeed)
             {
                 _apexAltitude = headCamera.position.y;
@@ -152,6 +155,7 @@ namespace MountainRescue.Systems.Safety
             float currentDrop = _apexAltitude - headCamera.position.y;
             bool isAnchored = _anchorSystem != null && _anchorSystem.IsAnchored();
 
+            // Instant kill trigger if falling too far without a rope
             if (!isAnchored && currentDrop > fatalFallDistance)
             {
                 if (verboseLogging) Debug.Log($"[FallSafety] FATAL FALL LIMIT EXCEEDED MID-AIR. Drop: {currentDrop:F2}m");
@@ -223,15 +227,18 @@ namespace MountainRescue.Systems.Safety
 
         private IEnumerator ConcussionRespawnRoutine()
         {
+            // 1. Register Death Logic
             if (MountainRescue.Systems.Session.GameSessionManager.Instance != null)
                 MountainRescue.Systems.Session.GameSessionManager.Instance.RegisterDeath();
 
             _currentState = SafetyState.Respawning;
             playerController.enabled = false;
 
+            // 2. Play Audio Impact
             if (audioSource && impactClip) audioSource.PlayOneShot(impactClip);
             SetMixerFreq(concussedCutoffHz);
 
+            // 3. Fade Out
             if (screenFader)
             {
                 screenFader.SetColor(new Color(1, 1, 1, 0.6f));
@@ -245,11 +252,13 @@ namespace MountainRescue.Systems.Safety
 
             yield return new WaitForSeconds(blackoutDuration);
 
+            // 4. Teleport Player to Safety
             if (respawnLocation != null)
             {
                 Transform rigTransform = playerController.transform;
                 rigTransform.position = respawnLocation.position;
 
+                // Match Rotation
                 if (headCamera != null)
                 {
                     float headY = headCamera.localEulerAngles.y;
@@ -257,10 +266,11 @@ namespace MountainRescue.Systems.Safety
                     rigTransform.rotation = Quaternion.Euler(0, targetY - headY, 0);
                 }
 
-                Physics.SyncTransforms();
+                Physics.SyncTransforms(); // Important: Update physics immediately
             }
             else
             {
+                // Last ditch attempt to find spawn if it was missing before
                 TryFindSpawnPoint();
                 if (respawnLocation != null)
                 {
@@ -269,16 +279,22 @@ namespace MountainRescue.Systems.Safety
                 }
             }
 
+            // --- FIX: Wait 1 frame for Belt/Socket scripts to update their position to the new player location ---
+            yield return null;
+
+            // 5. Force Respawn Tools
+            // We do this AFTER the player has moved AND we waited a frame for sockets to catch up
             if (toolRespawner != null)
             {
+                if (verboseLogging) Debug.Log("[FallSafety] Force recovering dropped tools...");
                 toolRespawner.RecoverDroppedTools();
-                if (verboseLogging) Debug.Log("[FallSafety] Tools recovered via ToolRespawner.");
             }
             else if (verboseLogging)
             {
                 Debug.LogWarning("[FallSafety] ToolRespawner not assigned! Dropped tools were NOT recovered.");
             }
 
+            // 6. Reset Audio & Visuals
             SetMixerFreq(normalCutoffHz);
             ResetSafetyState();
 
