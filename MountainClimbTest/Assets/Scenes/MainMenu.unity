@@ -6132,6 +6132,7 @@ GameObject:
   m_Component:
   - component: {fileID: 141444232}
   - component: {fileID: 141444233}
+  - component: {fileID: 141444234}
   m_Layer: 0
   m_Name: RightController
   m_TagString: Untagged
@@ -6225,6 +6226,19 @@ MonoBehaviour:
     m_Interactions: 
     m_SingletonActionBindings: []
     m_Flags: 0
+--- !u!114 &141444234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 141444231}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf51b87d320e13641b1de8419f1f3596, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HandPoseValidator
+  visualHandRoot: {fileID: 849240406}
 --- !u!1 &148611875
 GameObject:
   m_ObjectHideFlags: 0
@@ -6945,6 +6959,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 211590295}
   m_CullTransparentMesh: 1
+--- !u!1 &222502263
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 222502264}
+  m_Layer: 0
+  m_Name: SpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &222502264
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 222502263}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.296, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &262666577 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 24ccb900dc624354080d2a45f5622834, type: 3}
@@ -13665,6 +13710,7 @@ GameObject:
   m_Component:
   - component: {fileID: 738871507}
   - component: {fileID: 738871508}
+  - component: {fileID: 738871509}
   m_Layer: 0
   m_Name: LeftController
   m_TagString: Untagged
@@ -13758,6 +13804,19 @@ MonoBehaviour:
     m_Interactions: 
     m_SingletonActionBindings: []
     m_Flags: 0
+--- !u!114 &738871509
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 738871506}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf51b87d320e13641b1de8419f1f3596, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HandPoseValidator
+  visualHandRoot: {fileID: 1424484396}
 --- !u!114 &762804616
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18830,6 +18889,7 @@ GameObject:
   - component: {fileID: 1699801325}
   - component: {fileID: 1699801324}
   - component: {fileID: 1699801323}
+  - component: {fileID: 1699801326}
   m_Layer: 0
   m_Name: XR Origin (VR)
   m_TagString: Untagged
@@ -18884,6 +18944,20 @@ Transform:
   - {fileID: 417750899}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1699801326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1699801322}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66d89d51d34922e4dab2359267cfa910, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::XRSpawnFix
+  xrOrigin: {fileID: 1699801325}
+  spawnPoint: {fileID: 222502264}
 --- !u!1 &1705945055
 GameObject:
   m_ObjectHideFlags: 0
@@ -25124,6 +25198,7 @@ SceneRoots:
   - {fileID: 296935714}
   - {fileID: 1496350049}
   - {fileID: 206392640}
+  - {fileID: 222502264}
   - {fileID: 1699801325}
   - {fileID: 1275107187}
   - {fileID: 1124305257}
