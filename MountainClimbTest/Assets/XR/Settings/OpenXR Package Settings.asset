@@ -291,7 +291,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07f7bb37921fcf64895d8a4b4371ee99, type: 3}
   m_Name: FixQuest3Rotation Standalone
   m_EditorClassIdentifier: Assembly-CSharp::FixQuest3Rotation
-  m_enabled: 0
+  m_enabled: 1
   nameUi: Quest 3 Rotation Fix (PCVR & Android)
   version: 
   featureIdInternal: 
@@ -441,7 +441,6 @@ MonoBehaviour:
   m_Name: Android
   m_EditorClassIdentifier: Unity.XR.OpenXR::UnityEngine.XR.OpenXR.OpenXRSettings
   features:
-  - {fileID: 7156208567385169558}
   - {fileID: 5053859071728059723}
   - {fileID: 3484445145929416375}
   - {fileID: -1602185642909410889}
@@ -459,6 +458,7 @@ MonoBehaviour:
   - {fileID: 2872118514803214330}
   - {fileID: -1183129912374788531}
   - {fileID: 768492428529261565}
+  - {fileID: 7156208567385169558}
   - {fileID: -5761947665438487117}
   - {fileID: 4960581553998594022}
   customLoaderName: 
