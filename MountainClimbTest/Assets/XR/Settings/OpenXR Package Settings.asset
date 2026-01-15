@@ -289,10 +289,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 07f7bb37921fcf64895d8a4b4371ee99, type: 3}
-  m_Name: FixQuest3Rotation Standalone
+  m_Name: Quest3RotationFix Standalone
   m_EditorClassIdentifier: Assembly-CSharp::FixQuest3Rotation
   m_enabled: 1
-  nameUi: Quest 3 Rotation Fix (PCVR & Android)
+  nameUi: Quest 3 Rotation Fix
   version: 
   featureIdInternal: 
   openxrExtensionStrings: 
@@ -1028,10 +1028,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 07f7bb37921fcf64895d8a4b4371ee99, type: 3}
-  m_Name: FixQuest3Rotation Android
+  m_Name: Quest3RotationFix Android
   m_EditorClassIdentifier: Assembly-CSharp::FixQuest3Rotation
   m_enabled: 0
-  nameUi: Quest 3 Rotation Fix (PCVR & Android)
+  nameUi: Quest 3 Rotation Fix
   version: 
   featureIdInternal: 
   openxrExtensionStrings: 
