@@ -279,6 +279,28 @@ MonoBehaviour:
   targetOpenXRApiVersion: 
   required: 0
   customRuntimeLoaderName: 
+--- !u!114 &-4335902486482269133
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07f7bb37921fcf64895d8a4b4371ee99, type: 3}
+  m_Name: FixQuest3Rotation Standalone
+  m_EditorClassIdentifier: Assembly-CSharp::FixQuest3Rotation
+  m_enabled: 0
+  nameUi: Quest 3 Rotation Fix (PCVR & Android)
+  version: 
+  featureIdInternal: 
+  openxrExtensionStrings: 
+  company: 
+  priority: 0
+  targetOpenXRApiVersion: 1.1.53
+  required: 0
+  customRuntimeLoaderName: 
 --- !u!114 &-3681817404556505705
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -343,6 +365,7 @@ MonoBehaviour:
   - {fileID: 6573970257374160823}
   - {fileID: -2886599215480386783}
   - {fileID: 5008311219758761088}
+  - {fileID: -4335902486482269133}
   - {fileID: -6718417174855774671}
   - {fileID: 3402946050726380665}
   - {fileID: -1981684520232342865}
@@ -418,6 +441,7 @@ MonoBehaviour:
   m_Name: Android
   m_EditorClassIdentifier: Unity.XR.OpenXR::UnityEngine.XR.OpenXR.OpenXRSettings
   features:
+  - {fileID: 7156208567385169558}
   - {fileID: 5053859071728059723}
   - {fileID: 3484445145929416375}
   - {fileID: -1602185642909410889}
@@ -994,6 +1018,28 @@ MonoBehaviour:
   required: 0
   customRuntimeLoaderName: 
   ignoreValidationErrors: 0
+--- !u!114 &7156208567385169558
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07f7bb37921fcf64895d8a4b4371ee99, type: 3}
+  m_Name: FixQuest3Rotation Android
+  m_EditorClassIdentifier: Assembly-CSharp::FixQuest3Rotation
+  m_enabled: 0
+  nameUi: Quest 3 Rotation Fix (PCVR & Android)
+  version: 
+  featureIdInternal: 
+  openxrExtensionStrings: 
+  company: 
+  priority: 0
+  targetOpenXRApiVersion: 1.1.53
+  required: 0
+  customRuntimeLoaderName: 
 --- !u!114 &8129805228158912149
 MonoBehaviour:
   m_ObjectHideFlags: 0
