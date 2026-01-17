@@ -8,22 +8,19 @@ namespace MountainRescue.Systems
 {
     public class BreathManager : MonoBehaviour
     {
+        public static BreathManager Instance;
+
         [Header("Dependencies")]
         public PlayerSensorSuite sensorSuite;
         public LocomotionProvider moveProvider;
 
         [Header("Audio Integration")]
         [SerializeField] private AudioMixer masterMixer;
-
-        [Tooltip("The Exposed Parameter for the Ambience Low Pass Filter.")]
         [SerializeField] private string ambienceParam = "AmbienceLowPass";
-
-        [Tooltip("The Exposed Parameter for the Music Low Pass Filter.")]
         [SerializeField] private string musicParam = "MusicLowPass";
-
         [Space]
-        [SerializeField] private float minCutoff = 500f;   // Muffled (0% Stamina)
-        [SerializeField] private float maxCutoff = 22000f; // Clear (100% Stamina)
+        [SerializeField] private float minCutoff = 500f;
+        [SerializeField] private float maxCutoff = 22000f;
 
         [Header("Stamina Settings")]
         public float maxStamina = 100f;
@@ -53,6 +50,7 @@ namespace MountainRescue.Systems
 
         [Header("Oxygen Tank Settings")]
         public float currentTankFuel = 100f;
+        public float maxTankFuel = 100f;
         public float tankUsageCost = 2f;
 
         [Header("Events")]
@@ -61,6 +59,19 @@ namespace MountainRescue.Systems
         public UnityEvent<bool> onFocusStateChanged;
         public UnityEvent onThinAirReached;
         public UnityEvent onStaminaEmpty;
+        public UnityEvent onPlayerDeath;
+
+        private void Awake()
+        {
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+        }
 
         private void Start()
         {
@@ -72,7 +83,6 @@ namespace MountainRescue.Systems
             if (moveProvider == null)
                 Debug.LogWarning("BreathManager: No MoveProvider assigned.");
 
-            // Reset audio to clear on start
             if (masterMixer != null)
             {
                 masterMixer.SetFloat(ambienceParam, maxCutoff);
@@ -93,12 +103,9 @@ namespace MountainRescue.Systems
             CheckThinAirThreshold(currentHPa);
             UpdateAudioEffects();
 
-            // Debugging (Reduced spam)
             _logTimer += Time.deltaTime;
             if (_logTimer >= 2.0f)
             {
-                string zone = (currentHPa < thinAirThreshold) ? "<color=red>THIN AIR</color>" : "<color=cyan>NORMAL</color>";
-                // Debug.Log($"[STAMINA] {currentStamina:F1}/{maxStamina} | {zone} | Tank: {hasOxygenTank}");
                 _logTimer = 0;
             }
         }
@@ -107,7 +114,6 @@ namespace MountainRescue.Systems
         {
             float hPa = sensorSuite.GetPressureHPa();
 
-            // Block focus in thin air unless the tank is being used
             if (state && hPa < thinAirThreshold && !hasOxygenTank)
             {
                 isFocusing = false;
@@ -121,16 +127,13 @@ namespace MountainRescue.Systems
         {
             float staminaPercent = currentStamina / maxStamina;
 
-            // Muffles BOTH Ambience and Music as you get tired
             if (masterMixer != null)
             {
                 float targetCutoff = Mathf.Lerp(minCutoff, maxCutoff, staminaPercent);
-
                 masterMixer.SetFloat(ambienceParam, targetCutoff);
                 masterMixer.SetFloat(musicParam, targetCutoff);
             }
 
-            // Lower volume of generic ambience if manager exists
             if (MountainRescue.Engine.AmbienceManager.Instance != null)
             {
                 float targetVolume = Mathf.Lerp(0.3f, 1.0f, staminaPercent);
@@ -142,7 +145,6 @@ namespace MountainRescue.Systems
         {
             if (moveProvider == null) return;
 
-            // Prevent walking/turning while focusing
             if (isFocusing && moveProvider.enabled)
             {
                 moveProvider.enabled = false;
@@ -236,13 +238,42 @@ namespace MountainRescue.Systems
             if (Mathf.Abs(previousStamina - currentStamina) > 0.01f)
                 onStaminaChanged.Invoke(currentStamina / maxStamina);
 
-            // Handle Low Stamina State Logic (With de-bouncing)
             bool isCurrentlyLow = currentStamina < lowStaminaThreshold;
 
             if (isCurrentlyLow != _isInLowStaminaState)
             {
                 _isInLowStaminaState = isCurrentlyLow;
                 onLowStaminaStateChanged.Invoke(_isInLowStaminaState);
+            }
+
+            if (currentStamina <= 0f)
+            {
+                TriggerStaminaDeath();
+            }
+        }
+
+        private void TriggerStaminaDeath()
+        {
+            onPlayerDeath.Invoke();
+        }
+
+        public void ResetOnDeath()
+        {
+            currentStamina = maxStamina;
+            currentTankFuel = maxTankFuel;
+            hasOxygenTank = false;
+            isFocusing = false;
+            _isInLowStaminaState = false;
+            _wasInThinAir = false;
+
+            onStaminaChanged.Invoke(1f);
+            onLowStaminaStateChanged.Invoke(false);
+            onFocusStateChanged.Invoke(false);
+
+            if (masterMixer != null)
+            {
+                masterMixer.SetFloat(ambienceParam, maxCutoff);
+                masterMixer.SetFloat(musicParam, maxCutoff);
             }
         }
 

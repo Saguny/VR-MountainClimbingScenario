@@ -1709,7 +1709,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Engine.SceneExitTrigger
   targetScene: Scene1
   targetSpawnPointName: SpawnPoint
-  requiredStoryStage: 2
+  requiredStoryStage: 0
 --- !u!65 &245710321
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2110,7 +2110,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DialogueZoneTrigger
   npcController: {fileID: 910850969}
   sequenceToTrigger: {fileID: 11400000, guid: 48c2779a3ec0a3b469ee9bb63bcd283d, type: 2}
-  requiredStoryStage: 0
+  requiredStoryStage: 1
   triggerOnlyOnce: 1
 --- !u!65 &326903644
 BoxCollider:
@@ -5502,7 +5502,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf51b87d320e13641b1de8419f1f3596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandPoseValidator
-  visualHandRoot: {fileID: 651811316}
 --- !u!114 &832039724
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11424,7 +11423,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf51b87d320e13641b1de8419f1f3596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandPoseValidator
-  visualHandRoot: {fileID: 1108635731}
 --- !u!1001 &1025315149
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -12192,6 +12190,11 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 267196343369224960, guid: 88d5d7e29eb6eb84ba92760ebe33b0d5, type: 3}
   m_PrefabInstance: {fileID: 1108635730}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1112727446 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7324994647639559011, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+  m_PrefabInstance: {fileID: 1963763627610380052}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &1113831650
 MonoBehaviour:
@@ -23267,6 +23270,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: breathManager
+      value: 
+      objectReference: {fileID: 1629185943}
+    - target: {fileID: 3251453854271377502, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: toolRespawner
       value: 
       objectReference: {fileID: 1448916254}
@@ -23307,8 +23314,20 @@ PrefabInstance:
       value: 0.25
       objectReference: {fileID: 0}
     - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: onPlayerDeath.m_PersistentCalls.m_Calls.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: onStaminaEmpty.m_PersistentCalls.m_Calls.Array.size
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: onPlayerDeath.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1112727446}
+    - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: onPlayerDeath.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 3866027101974061482, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: onStaminaEmpty.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
