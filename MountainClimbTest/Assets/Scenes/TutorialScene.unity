@@ -1709,7 +1709,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Engine.SceneExitTrigger
   targetScene: Scene1
   targetSpawnPointName: SpawnPoint
-  requiredStoryStage: 0
+  requiredStoryStage: 2
 --- !u!65 &245710321
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2110,7 +2110,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DialogueZoneTrigger
   npcController: {fileID: 910850969}
   sequenceToTrigger: {fileID: 11400000, guid: 48c2779a3ec0a3b469ee9bb63bcd283d, type: 2}
-  requiredStoryStage: 1
+  requiredStoryStage: 0
   triggerOnlyOnce: 1
 --- !u!65 &326903644
 BoxCollider:
