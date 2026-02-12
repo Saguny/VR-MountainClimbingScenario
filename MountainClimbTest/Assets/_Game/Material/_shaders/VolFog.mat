@@ -25,7 +25,10 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - USE_3D_NOISE
+  - USE_DITHERING
+  - USE_SHADOWS
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -73,6 +76,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _NoiseTexture:
+        m_Texture: {fileID: 2800000, guid: 02eb2cc71d9c46748b527e265e57a11a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -102,6 +109,7 @@ Material:
     - _AddPrecomputedVelocity: 0
     - _AlphaClip: 0
     - _AlphaToMask: 0
+    - _BaseHeight: 0
     - _Blend: 0
     - _BlendModePreserveSpecular: 1
     - _BumpScale: 1
@@ -109,40 +117,56 @@ Material:
     - _ClearCoatSmoothness: 0
     - _Cull: 2
     - _Cutoff: 0.5
-    - _DensityMultiplier: 0.16
-    - _DensityThreshold: 0.829
+    - _Density: 1.23
+    - _DensityMultiplier: 2
+    - _DensityThreshold: 0.959
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _EnvironmentReflections: 1
+    - _FogBaseHeight: 0
+    - _FogTopHeight: 20
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _LightScattering: 0.75
-    - _MaxDistance: 50
+    - _HeightFalloff: 0
+    - _LightIntensity: 2
+    - _LightScattering: 0.484
+    - _MaxDistance: 150
+    - _MaxSteps: 24.8
     - _Metallic: 0
     - _NoiseOffset: 0
-    - _NoiseTiling: 0
+    - _NoiseScale: 1
+    - _NoiseTiling: 147.2
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _QueueOffset: 0
     - _ReceiveShadows: 1
+    - _Scattering: 0.3
+    - _ShadowStepSize: 2.88
+    - _ShadowSteps: 3
+    - _SkyFogAmount: 0
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
-    - _StepSize: 0.18
+    - _StepSize: 1
     - _Surface: 0
+    - _Use3DNoise: 1
+    - _UseDithering: 1
+    - _UseShadows: 1
     - _WorkflowMode: 1
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 0.4339623, g: 0.4339623, b: 0.4339623, a: 1}
+    - _Color: {r: 0.745283, g: 0.745283, b: 0.745283, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _LightContribution: {r: 2.981132, g: 2.981132, b: 2.981132, a: 1}
+    - _LightColor: {r: 1, g: 1, b: 1, a: 1}
+    - _LightContribution: {r: 11.924528, g: 11.924528, b: 11.924528, a: 1}
+    - _NoiseSpeed: {r: 0.01, g: 0.005, b: 0, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

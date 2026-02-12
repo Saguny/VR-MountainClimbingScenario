@@ -3,19 +3,20 @@ Shader "Tutorial/VolumetricFog_FinalFix"
     Properties
     {
         _Color("Fog Color", Color) = (1, 1, 1, 1)
-        _MaxDistance("Max Distance", float) = 150
-        _StepSize("Step Size", Range(0.1, 5)) = 0.5
+        _MaxDistance("Max Distance", float) = 100
+        _StepSize("Step Size", Range(0.1, 5)) = 1.0
         _DensityMultiplier("Density", Range(0, 10)) = 1
         _FogNoise("3D Noise", 3D) = "white" {}
         _NoiseTiling("Noise Tiling", float) = 0.1
         _DensityThreshold("Threshold", Range(0, 1)) = 0.1
         [HDR]_LightContribution("Light Intensity", Color) = (1, 1, 1, 1)
         _LightScattering("G (Scattering)", Range(0, 0.98)) = 0.5
+        _HeightFalloff("Height Falloff", Range(0, 1)) = 0.5
+        _BaseHeight("Base Height", float) = 0
     }
 
     SubShader
     {
-        // Use "BeforeTransparent" to ensure we can see it from a distance
         Tags { "RenderType" = "Opaque" "RenderPipeline" = "UniversalPipeline" "Queue" = "Geometry+1" }
 
         Pass
@@ -43,6 +44,8 @@ Shader "Tutorial/VolumetricFog_FinalFix"
             float _DensityThreshold;
             float _LightScattering;
             float4 _LightContribution;
+            float _HeightFalloff;
+            float _BaseHeight;
             
             TEXTURE3D(_FogNoise);
             SAMPLER(sampler_FogNoise);
@@ -50,16 +53,19 @@ Shader "Tutorial/VolumetricFog_FinalFix"
             float henyey_greenstein(float cosAngle, float g)
             {
                 float g2 = g * g;
-                // Clamped denominator to prevent "flashing"
                 return (1.0 - g2) / (4.0 * PI * pow(max(0.01, 1.0 + g2 - 2.0 * g * cosAngle), 1.5));
             }
 
             float get_density(float3 worldPos)
             {
-                // Multiply worldPos by Tiling - ensures Y (height) is respected
+                // Height-based falloff for more realistic fog
+                float heightFactor = saturate(exp(-max(0, worldPos.y - _BaseHeight) * _HeightFalloff));
+                
                 float3 uvw = worldPos * _NoiseTiling;
                 float noise = SAMPLE_TEXTURE3D_LOD(_FogNoise, sampler_FogNoise, uvw, 0).r;
-                return saturate(noise - _DensityThreshold) * _DensityMultiplier;
+                float density = saturate(noise - _DensityThreshold) * _DensityMultiplier;
+                
+                return density * heightFactor;
             }
 
             half4 frag(Varyings IN) : SV_Target
@@ -67,7 +73,6 @@ Shader "Tutorial/VolumetricFog_FinalFix"
                 float4 sceneColor = SAMPLE_TEXTURE2D(_BlitTexture, sampler_LinearClamp, IN.texcoord);
                 float rawDepth = SampleSceneDepth(IN.texcoord);
                 
-                // Get Camera-Relative World Positions
                 float3 worldPos = ComputeWorldSpacePosition(IN.texcoord, rawDepth, UNITY_MATRIX_I_VP);
                 float3 cameraPos = GetCameraPositionWS();
                 
@@ -75,20 +80,18 @@ Shader "Tutorial/VolumetricFog_FinalFix"
                 float viewDist = length(viewVec);
                 float3 rayDir = viewVec / viewDist;
 
-                // Stop at geometry or MaxDistance
-                float distLimit = min(viewDist, _MaxDistance);
+                bool isSkybox = rawDepth >= 0.9999;
+                float distLimit = isSkybox ? _MaxDistance : min(viewDist, _MaxDistance);
                 
-                // Jittering based on screen pixel to break up banding
                 float jitter = InterleavedGradientNoise(IN.texcoord * _ScreenParams.xy, 0);
                 float distTravelled = jitter * _StepSize;
                 
                 float transmittance = 1.0;
                 float3 fogLight = 0;
 
-                
-                
+                Light mainLight = GetMainLight();
 
-                // Start Raymarch
+                // Raymarch
                 [loop]
                 while (distTravelled < distLimit)
                 {
@@ -97,23 +100,18 @@ Shader "Tutorial/VolumetricFog_FinalFix"
 
                     if (d > 0.01)
                     {
-                        // LIGHTING
-                        // Use a slight bias to prevent self-shadowing artifacts
                         float4 shadowCoord = TransformWorldToShadowCoord(currentPos);
-                        Light mainLight = GetMainLight(shadowCoord);
+                        float shadow = MainLightRealtimeShadow(shadowCoord);
                         
-                        // God Ray Math
+                        // God rays - only visible when looking toward light
                         float cosAngle = dot(rayDir, mainLight.direction);
                         float phase = henyey_greenstein(cosAngle, _LightScattering);
                         
-                        // Attenuation (Shadows + Light Color)
-                        float3 lightColor = mainLight.color * mainLight.shadowAttenuation;
+                        // Subtle light scattering
+                        float3 lightColor = mainLight.color * shadow;
+                        float3 stepLight = lightColor * _LightContribution.rgb * phase * d * 0.5; // Reduced multiplier
                         
-                        // Accumulate
-                        float3 stepLight = lightColor * _LightContribution.rgb * phase * d;
                         fogLight += stepLight * transmittance * _StepSize;
-                        
-                        // Beer-Lambert law
                         transmittance *= exp(-d * _StepSize);
                     }
 
@@ -121,9 +119,12 @@ Shader "Tutorial/VolumetricFog_FinalFix"
                     distTravelled += _StepSize;
                 }
 
-                // Blend: Background + Scattered Fog Light
-                // We use _Color as a global "Tint" for the fog density
-                float3 finalColor = (sceneColor.rgb * transmittance) + (fogLight * _Color.rgb);
+                // Gentle fog blend
+                float3 finalColor = sceneColor.rgb * transmittance + fogLight;
+                
+                // Apply fog color only to dense areas
+                float fogAmount = 1.0 - transmittance;
+                finalColor = lerp(finalColor, _Color.rgb, fogAmount * 0.3);
                 
                 return float4(finalColor, 1.0);
             }
