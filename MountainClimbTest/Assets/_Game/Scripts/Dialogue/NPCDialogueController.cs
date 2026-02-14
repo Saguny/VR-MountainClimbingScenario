@@ -9,14 +9,27 @@ using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 namespace MountainRescue.Dialogue
 {
-    public class NPCDialogueController : MonoBehaviour
+    public class NPCDialogueController : MonoBehaviour, IDialoguePlayback
     {
         [Header("Story Status")]
         [Tooltip("Increments automatically when a sequence with 'advancesStory' finishes.")]
         public int CurrentStoryStage = 0;
 
         [Header("Manual UI Setup")]
+        [Tooltip("Leave empty to auto-find using Subtitle Object Name below")]
         [SerializeField] private TextMeshProUGUI subtitleTMP;
+
+        [Header("DDOL Subtitle Search")]
+        [Tooltip("Name of the subtitle GameObject in the DDOL rig (e.g., 'NPCSubtitle')")]
+        [SerializeField] private string subtitleObjectName = "";
+        [Tooltip("Optional: Tag to search for (leave empty to use name only)")]
+        [SerializeField] private string subtitleTag = "";
+        [Tooltip("Optional: Name of the DDOL parent object (e.g., 'XR Origin' or 'PlayerRig')")]
+        [SerializeField] private string ddolParentName = "";
+        [Tooltip("Number of frames to wait before searching for DDOL subtitle")]
+        [SerializeField] private int ddolSearchDelay = 2;
+        [Tooltip("Max attempts to find DDOL subtitle")]
+        [SerializeField] private int maxSearchAttempts = 5;
 
         [Header("NPC Components")]
         [SerializeField] private AudioSource speechSource;
@@ -44,6 +57,12 @@ namespace MountainRescue.Dialogue
         [Header("Initial Content")]
         [SerializeField] private DialogueSequence initialSequence;
 
+        [Header("Auto-Play Settings")]
+        [Tooltip("Auto-start this sequence on Start(). Leave empty to disable.")]
+        [SerializeField] private DialogueSequence autoPlaySequence;
+        [Tooltip("Delay before auto-play starts (seconds).")]
+        [SerializeField] private float autoPlayDelay = 0f;
+
         // --- INTERNAL VARIABLES ---
         private Transform _waypointContainer;
         private Coroutine _activeRoutine;
@@ -53,16 +72,20 @@ namespace MountainRescue.Dialogue
         // Speed Caching
         private float _cachedMoveSpeed = 0f;
 
-        public delegate void DialogueEvent(string text);
-        public event DialogueEvent OnSubtitleUpdated;
+        // Line Tracking (for IDialoguePlayback)
+        private int _currentLineIndex = -1;
+        private bool _isPlaying = false;
+
+        // Interface Properties
+        public int CurrentLineIndex => _currentLineIndex;
+        public bool IsPlaying => _isPlaying;
+
+        public event System.Action<string> OnSubtitleUpdated;
 
         private void Awake()
         {
             GameObject container = GameObject.Find("NPC_Waypoints");
             if (container != null) _waypointContainer = container.transform;
-
-            // UI starts disabled
-            if (subtitleTMP != null) subtitleTMP.gameObject.SetActive(false);
 
             if (Camera.main != null) _playerHead = Camera.main.transform;
 
@@ -71,6 +94,163 @@ namespace MountainRescue.Dialogue
             {
                 _cachedMoveSpeed = moveProvider.moveSpeed;
             }
+        }
+
+        private void Start()
+        {
+            // Search for DDOL subtitle if not manually assigned
+            if (subtitleTMP == null)
+            {
+                StartCoroutine(FindDDOLSubtitleDelayed());
+            }
+
+            // Auto-play if sequence is assigned
+            if (autoPlaySequence != null)
+            {
+                if (autoPlayDelay > 0f)
+                    StartCoroutine(AutoPlayRoutine());
+                else
+                    TriggerSequence(autoPlaySequence);
+            }
+        }
+
+        private IEnumerator FindDDOLSubtitleDelayed()
+        {
+            // Wait a couple frames for DDOL objects to initialize
+            for (int i = 0; i < ddolSearchDelay; i++)
+            {
+                yield return null;
+            }
+
+            int attempts = 0;
+            while (subtitleTMP == null && attempts < maxSearchAttempts)
+            {
+                FindDDOLSubtitle();
+
+                if (subtitleTMP == null)
+                {
+                    attempts++;
+                    yield return new WaitForSeconds(0.1f); // Wait 0.1s between attempts
+                }
+            }
+
+            if (subtitleTMP == null)
+            {
+                Debug.LogWarning($"[NPCDialogue] Failed to find DDOL subtitle after {maxSearchAttempts} attempts");
+            }
+        }
+
+        private void FindDDOLSubtitle()
+        {
+            GameObject subtitleObject = null;
+
+            // Method 1: Search by tag (only works if active)
+            if (!string.IsNullOrEmpty(subtitleTag))
+            {
+                subtitleObject = GameObject.FindGameObjectWithTag(subtitleTag);
+                if (subtitleObject != null)
+                {
+                    Debug.Log($"[NPCDialogue] Found subtitle via tag '{subtitleTag}': {subtitleObject.name}");
+                }
+            }
+
+            // Method 2: Search by name (only works if active)
+            if (subtitleObject == null && !string.IsNullOrEmpty(subtitleObjectName))
+            {
+                subtitleObject = GameObject.Find(subtitleObjectName);
+                if (subtitleObject != null)
+                {
+                    Debug.Log($"[NPCDialogue] Found subtitle via name '{subtitleObjectName}': {subtitleObject.name}");
+                }
+            }
+
+            // Method 3: Search through DDOL parent (works even if child is inactive)
+            if (subtitleObject == null && !string.IsNullOrEmpty(ddolParentName))
+            {
+                GameObject parentObject = GameObject.Find(ddolParentName);
+                if (parentObject != null)
+                {
+                    // Search all children, including inactive ones
+                    Transform found = FindChildRecursive(parentObject.transform, subtitleObjectName);
+                    if (found != null)
+                    {
+                        subtitleObject = found.gameObject;
+                        Debug.Log($"[NPCDialogue] Found subtitle via parent search in '{ddolParentName}': {subtitleObject.name}");
+                    }
+                }
+            }
+
+            // Method 4: Search ALL objects including inactive (last resort - expensive!)
+            if (subtitleObject == null && !string.IsNullOrEmpty(subtitleObjectName))
+            {
+                TextMeshProUGUI[] allTMPs = Resources.FindObjectsOfTypeAll<TextMeshProUGUI>();
+                foreach (var tmp in allTMPs)
+                {
+                    if (tmp.gameObject.name == subtitleObjectName)
+                    {
+                        // Make sure it's not a prefab or asset
+                        if (tmp.gameObject.scene.name != null)
+                        {
+                            subtitleObject = tmp.gameObject;
+                            Debug.Log($"[NPCDialogue] Found subtitle via FindObjectsOfTypeAll: {subtitleObject.name}");
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Get TextMeshProUGUI component
+            if (subtitleObject != null)
+            {
+                subtitleTMP = subtitleObject.GetComponent<TextMeshProUGUI>();
+
+                if (subtitleTMP == null)
+                {
+                    // Try to find in children
+                    subtitleTMP = subtitleObject.GetComponentInChildren<TextMeshProUGUI>(true); // true = include inactive
+                }
+
+                if (subtitleTMP != null)
+                {
+                    Debug.Log($"[NPCDialogue] Successfully connected to DDOL subtitle: {subtitleTMP.name} (Active: {subtitleTMP.gameObject.activeInHierarchy})");
+                    // Don't force it inactive here - respect its current state
+                }
+                else
+                {
+                    Debug.LogWarning($"[NPCDialogue] Found GameObject '{subtitleObject.name}' but no TextMeshProUGUI component!");
+                }
+            }
+            else if (!string.IsNullOrEmpty(subtitleObjectName) || !string.IsNullOrEmpty(subtitleTag))
+            {
+                Debug.LogWarning($"[NPCDialogue] Could not find DDOL subtitle (Tag: '{subtitleTag}', Name: '{subtitleObjectName}', Parent: '{ddolParentName}')");
+            }
+        }
+
+        // Helper method to search children recursively (including inactive)
+        private Transform FindChildRecursive(Transform parent, string childName)
+        {
+            // Check direct children first
+            foreach (Transform child in parent)
+            {
+                if (child.name == childName)
+                    return child;
+            }
+
+            // Then search grandchildren recursively
+            foreach (Transform child in parent)
+            {
+                Transform found = FindChildRecursive(child, childName);
+                if (found != null)
+                    return found;
+            }
+
+            return null;
+        }
+
+        private IEnumerator AutoPlayRoutine()
+        {
+            yield return new WaitForSeconds(autoPlayDelay);
+            TriggerSequence(autoPlaySequence);
         }
 
         private void LateUpdate()
@@ -115,8 +295,36 @@ namespace MountainRescue.Dialogue
             _activeRoutine = StartCoroutine(PlaySequenceRoutine(sequence));
         }
 
+        public void InterruptWithSequence(DialogueSequence sequence)
+        {
+            if (sequence == null) return;
+
+            // Stop current routine
+            if (_activeRoutine != null) StopCoroutine(_activeRoutine);
+
+            // Stop animations
+            if (npcAnimator != null)
+            {
+                if (!string.IsNullOrEmpty(walkingBool))
+                    npcAnimator.SetBool(walkingBool, false);
+            }
+
+            // Reset state
+            _isWalking = false;
+            _currentLineIndex = -1;
+
+            // Start new sequence
+            _activeRoutine = StartCoroutine(PlaySequenceRoutine(sequence));
+        }
+
         private void SetSubtitleText(string text, bool active)
         {
+            // Lazy initialization - try to find subtitle if still null
+            if (subtitleTMP == null && (!string.IsNullOrEmpty(subtitleObjectName) || !string.IsNullOrEmpty(subtitleTag)))
+            {
+                FindDDOLSubtitle();
+            }
+
             Debug.Log($"[Subtitle Debug] Setting Text to: '{text}' | Active: {active} | Time: {Time.time}");
             if (subtitleTMP != null)
             {
@@ -126,6 +334,10 @@ namespace MountainRescue.Dialogue
                     subtitleTMP.text = text;
                     subtitleTMP.ForceMeshUpdate();
                 }
+            }
+            else
+            {
+                Debug.LogWarning($"[NPCDialogue] Subtitle TMP still null when trying to display: '{text}'");
             }
             OnSubtitleUpdated?.Invoke(text);
         }
@@ -164,6 +376,9 @@ namespace MountainRescue.Dialogue
         {
             if (sequence == null) yield break;
 
+            _isPlaying = true;
+            _currentLineIndex = 0;
+
             ApplyXRAction(sequence.onStartAction);
 
             // Start Movement
@@ -179,8 +394,11 @@ namespace MountainRescue.Dialogue
             if (!string.IsNullOrEmpty(sequence.talkingBool))
                 npcAnimator.SetBool(sequence.talkingBool, true);
 
-            foreach (var line in sequence.lines)
+            for (int i = 0; i < sequence.lines.Count; i++)
             {
+                _currentLineIndex = i;
+                var line = sequence.lines[i];
+
                 SetSubtitleText(line.textContent, true);
 
                 if (speechSource != null && line.voiceClip != null)
@@ -222,10 +440,14 @@ namespace MountainRescue.Dialogue
             ApplyXRAction(sequence.onEndAction);
 
             if (sequence.nextSequence != null)
+            {
                 yield return StartCoroutine(PlaySequenceRoutine(sequence.nextSequence));
+            }
             else
             {
                 SetSubtitleText("", false);
+                _isPlaying = false;
+                _currentLineIndex = -1;
                 _activeRoutine = null;
             }
         }

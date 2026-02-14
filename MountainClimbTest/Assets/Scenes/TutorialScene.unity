@@ -2356,7 +2356,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38a52cbe135f8dc4bad799e963f3578b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Engine.SceneExitTrigger
-  targetScene: Scene1
+  targetScene: Scene3
   targetSpawnPointName: SpawnPoint
   requiredStoryStage: 0
 --- !u!65 &245710321
@@ -15827,6 +15827,14 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: -0.007
       objectReference: {fileID: 0}
+    - target: {fileID: 4055541277730603419, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_Name
+      value: Subtitle
+      objectReference: {fileID: 0}
+    - target: {fileID: 4055541277730603419, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_TagString
+      value: Subtitles
+      objectReference: {fileID: 0}
     - target: {fileID: 4066039204437113437, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.121
@@ -16093,7 +16101,7 @@ PrefabInstance:
       objectReference: {fileID: 1113831650}
     - target: {fileID: 7552884615736384410, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: m_Volume
-      value: 0.4
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 7691961800955009724, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: m_LocalPosition.x

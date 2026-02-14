@@ -8,7 +8,8 @@ namespace MountainRescue.UI.Views
     public class SpatialSubtitleView : MonoBehaviour
     {
         [Header("References")]
-        [SerializeField] private MountainRescue.Dialogue.NPCDialogueController linkedNPC;
+        [Tooltip("Any dialogue controller (NPC, Victim, Radio, etc.) that implements IDialoguePlayback")]
+        [SerializeField] private MonoBehaviour linkedController;
         [SerializeField] private TextMeshProUGUI subtitleText;
 
         [Header("Settings")]
@@ -22,6 +23,7 @@ namespace MountainRescue.UI.Views
         private CanvasGroup _canvasGroup;
         private Transform _mainCamera;
         private Coroutine _typewriterRoutine;
+        private MountainRescue.Dialogue.IDialoguePlayback _dialoguePlayback;
 
         private void Awake()
         {
@@ -29,16 +31,33 @@ namespace MountainRescue.UI.Views
             _canvasGroup.alpha = 0f;
 
             if (Camera.main != null) _mainCamera = Camera.main.transform;
+
+            // Get the IDialoguePlayback interface
+            if (linkedController != null)
+            {
+                _dialoguePlayback = linkedController as MountainRescue.Dialogue.IDialoguePlayback;
+
+                if (_dialoguePlayback == null)
+                {
+                    Debug.LogError($"[SpatialSubtitleView] Linked controller {linkedController.name} does not implement IDialoguePlayback!", this);
+                }
+            }
         }
 
         private void OnEnable()
         {
-            if (linkedNPC != null) linkedNPC.OnSubtitleUpdated += UpdateText;
+            if (_dialoguePlayback != null)
+            {
+                _dialoguePlayback.OnSubtitleUpdated += UpdateText;
+            }
         }
 
         private void OnDisable()
         {
-            if (linkedNPC != null) linkedNPC.OnSubtitleUpdated -= UpdateText;
+            if (_dialoguePlayback != null)
+            {
+                _dialoguePlayback.OnSubtitleUpdated -= UpdateText;
+            }
         }
 
         private void LateUpdate()
