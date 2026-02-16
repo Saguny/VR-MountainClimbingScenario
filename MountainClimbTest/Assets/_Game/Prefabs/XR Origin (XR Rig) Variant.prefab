@@ -1048,6 +1048,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.UI.HeadsetFader
   fadeImage: {fileID: 1036187864055539784}
   defaultFadeTime: 1
+  debugMode: 1
 --- !u!1 &3109206096184573767
 GameObject:
   m_ObjectHideFlags: 0
@@ -4350,10 +4351,10 @@ PrefabInstance:
       addedObject: {fileID: 8944580648527596700}
     - targetCorrespondingSourceObject: {fileID: 1767192434, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 4383567753684816203}
+      addedObject: {fileID: 7512180216076162798}
     - targetCorrespondingSourceObject: {fileID: 1767192434, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 7512180216076162798}
+      addedObject: {fileID: 4383567753684816203}
     - targetCorrespondingSourceObject: {fileID: 1767192434, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 336726181969986311}

@@ -1,107 +1,146 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
+using TMPro;
 
 [RequireComponent(typeof(Renderer))]
 [ExecuteAlways]
 public class DissolveController : MonoBehaviour
 {
+    [Header("Interaction Settings")]
+    public float maxInteractionDistance = 5.0f;
+    public Transform playerCamera;
+
+    [Range(0.1f, 0.9f)]
+    public float textDistanceFromCamera = 0.3f;
+
     [Header("Dissolve Settings")]
     public float dissolveDuration = 2f;
-
-    public float delayBeforeDissolve = 0f;
-
     public bool destroyWhenDone = true;
 
-    [Header("Animation")]
-    public AnimationCurve dissolveCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+    [Header("TMP Text Settings")]
+    public TextMeshProUGUI textMesh;
+    public string messageToShow = "That's odd...";
+    public float textDisplayDuration = 2.0f;
 
     [Header("Editor Preview")]
     [Range(0f, 1f)]
     public float previewProgress = 0f;
 
-    [Header("Optional Events")]
-    public UnityEvent onDissolveStart;
-
-    public UnityEvent onDissolveComplete;
-
-    private Material[] materials;
     private int dissolveAmountID;
     private bool isDissolving = false;
     private Renderer targetRenderer;
+    private Collider targetCollider;
     private MaterialPropertyBlock propertyBlock;
+
+    void Awake()
+    {
+        targetRenderer = GetComponent<Renderer>();
+        targetCollider = GetComponent<Collider>();
+        dissolveAmountID = Shader.PropertyToID("_DissolveAmount");
+        propertyBlock = new MaterialPropertyBlock();
+    }
 
     void Start()
     {
-        targetRenderer = GetComponent<Renderer>();
-        dissolveAmountID = Shader.PropertyToID("_DissolveAmount");
-
         if (Application.isPlaying)
         {
-            materials = targetRenderer.materials;
+            if (textMesh != null) textMesh.gameObject.SetActive(false);
+            if (playerCamera == null && Camera.main != null) playerCamera = Camera.main.transform;
+
+            // Ensure car starts visible at runtime
+            UpdateDissolve(0);
         }
     }
 
     void OnValidate()
     {
-        if (!Application.isPlaying)
-        {
-            if (targetRenderer == null) targetRenderer = GetComponent<Renderer>();
-            if (propertyBlock == null) propertyBlock = new MaterialPropertyBlock();
-            if (dissolveAmountID == 0) dissolveAmountID = Shader.PropertyToID("_DissolveAmount");
+        // This makes the slider work in the Inspector
+        UpdateDissolve(previewProgress);
+    }
 
-            targetRenderer.GetPropertyBlock(propertyBlock);
-            float curveValue = dissolveCurve.Evaluate(previewProgress);
-            propertyBlock.SetFloat(dissolveAmountID, curveValue);
-            targetRenderer.SetPropertyBlock(propertyBlock);
-        }
+    private void UpdateDissolve(float value)
+    {
+        if (targetRenderer == null) targetRenderer = GetComponent<Renderer>();
+        if (propertyBlock == null) propertyBlock = new MaterialPropertyBlock();
+        if (dissolveAmountID == 0) dissolveAmountID = Shader.PropertyToID("_DissolveAmount");
+
+        targetRenderer.GetPropertyBlock(propertyBlock);
+        propertyBlock.SetFloat(dissolveAmountID, value);
+        targetRenderer.SetPropertyBlock(propertyBlock);
     }
 
     public void TriggerDissolve()
     {
-        if (!isDissolving && Application.isPlaying)
+        if (isDissolving || !Application.isPlaying) return;
+
+        float distance = Vector3.Distance(playerCamera.position, transform.position);
+
+        if (distance <= maxInteractionDistance)
         {
+            PositionTextInFrontOfPlayer();
             StartCoroutine(DissolveRoutine());
         }
+    }
+
+    private void PositionTextInFrontOfPlayer()
+    {
+        if (textMesh == null || playerCamera == null) return;
+
+        Vector3 targetPos = Vector3.Lerp(playerCamera.position, transform.position, textDistanceFromCamera);
+        textMesh.transform.position = targetPos;
+        textMesh.transform.LookAt(playerCamera);
+        textMesh.transform.Rotate(0, 180, 0);
     }
 
     private IEnumerator DissolveRoutine()
     {
         isDissolving = true;
 
-        if (delayBeforeDissolve > 0)
+        if (textMesh != null)
         {
-            yield return new WaitForSeconds(delayBeforeDissolve);
+            textMesh.text = messageToShow;
+            textMesh.gameObject.SetActive(true);
+            StartCoroutine(HandleTextLifeCycle());
         }
-
-        onDissolveStart?.Invoke();
 
         float elapsedTime = 0f;
         while (elapsedTime < dissolveDuration)
         {
             elapsedTime += Time.deltaTime;
+            float progress = Mathf.Clamp01(elapsedTime / dissolveDuration);
 
-            float normalizedTime = Mathf.Clamp01(elapsedTime / dissolveDuration);
-            float curveValue = dissolveCurve.Evaluate(normalizedTime);
-
-            foreach (Material mat in materials)
-            {
-                mat.SetFloat(dissolveAmountID, curveValue);
-            }
+            // Use the same helper function for runtime animation
+            UpdateDissolve(progress);
 
             yield return null;
         }
 
-        foreach (Material mat in materials)
-        {
-            mat.SetFloat(dissolveAmountID, 1f);
-        }
-
-        onDissolveComplete?.Invoke();
+        targetRenderer.enabled = false;
+        if (targetCollider != null) targetCollider.enabled = false;
 
         if (destroyWhenDone)
         {
+            yield return new WaitForSeconds(textDisplayDuration);
             Destroy(gameObject);
         }
+    }
+
+    private IEnumerator HandleTextLifeCycle()
+    {
+        float elapsed = 0f;
+        Color startColor = textMesh.color;
+        while (elapsed < textDisplayDuration)
+        {
+            elapsed += Time.deltaTime;
+            float normalizedTime = elapsed / textDisplayDuration;
+            if (normalizedTime > 0.5f)
+            {
+                float fadeAlpha = Mathf.InverseLerp(1.0f, 0.5f, normalizedTime);
+                textMesh.color = new Color(startColor.r, startColor.g, startColor.b, fadeAlpha);
+            }
+            yield return null;
+        }
+        textMesh.gameObject.SetActive(false);
     }
 }

@@ -129,6 +129,12 @@ namespace MountainRescue.Systems
 
         private void OnToolDropped(SelectExitEventArgs args)
         {
+
+            if (MountainRescue.Systems.Session.GameSessionManager.Instance != null)
+            {
+                MountainRescue.Systems.Session.GameSessionManager.Instance.RegisterSafetyViolation();
+            }
+
             if (!autoMagnetBack) return;
             XRGrabInteractable item = args.interactableObject as XRGrabInteractable;
             if (item != null) StartCoroutine(CheckMagnetRoutine(item));

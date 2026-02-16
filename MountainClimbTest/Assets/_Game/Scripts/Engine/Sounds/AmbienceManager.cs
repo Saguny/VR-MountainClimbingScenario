@@ -21,6 +21,7 @@ namespace MountainRescue.Engine
         [SerializeField] private string ambienceExposedParam = "AmbienceVol";
 
         private Coroutine ambienceFadeCoroutine;
+        private Coroutine musicFadeCoroutine;
 
         private void Awake()
         {
@@ -37,7 +38,6 @@ namespace MountainRescue.Engine
 
         public void PlayAmbience(AudioClip clip, bool fade = true)
         {
-            // If the clip is already playing, don't restart it
             if (globalAmbienceSource.clip == clip && globalAmbienceSource.isPlaying) return;
 
             if (fade)
@@ -49,7 +49,7 @@ namespace MountainRescue.Engine
             {
                 globalAmbienceSource.clip = clip;
                 globalAmbienceSource.loop = true;
-                globalAmbienceSource.volume = 1.0f; // Ensure volume is up if not fading
+                globalAmbienceSource.volume = 1.0f;
                 globalAmbienceSource.Play();
             }
         }
@@ -87,12 +87,56 @@ namespace MountainRescue.Engine
             }
         }
 
-        public void PlayMusic(AudioClip clip, bool loop = true)
+        // --- UPDATED: Music now crossfades just like Ambience ---
+        public void PlayMusic(AudioClip clip, bool loop = true, bool fade = true)
         {
             if (musicSource.clip == clip && musicSource.isPlaying) return;
-            musicSource.clip = clip;
-            musicSource.loop = loop;
-            musicSource.Play();
+
+            if (fade)
+            {
+                if (musicFadeCoroutine != null) StopCoroutine(musicFadeCoroutine);
+                musicFadeCoroutine = StartCoroutine(FadeToNewMusic(clip, loop, defaultFadeDuration));
+            }
+            else
+            {
+                musicSource.clip = clip;
+                musicSource.loop = loop;
+                musicSource.volume = 1.0f;
+                musicSource.Play();
+            }
+        }
+
+        private IEnumerator FadeToNewMusic(AudioClip newClip, bool loop, float duration)
+        {
+            float startVolume = musicSource.isPlaying ? musicSource.volume : 1.0f;
+
+            // Fade Out
+            if (musicSource.isPlaying)
+            {
+                for (float t = 0; t < duration / 2; t += Time.deltaTime)
+                {
+                    musicSource.volume = Mathf.Lerp(startVolume, 0, t / (duration / 2));
+                    yield return null;
+                }
+            }
+
+            musicSource.Stop();
+            musicSource.clip = newClip;
+            musicSource.volume = 0;
+
+            if (newClip != null)
+            {
+                musicSource.loop = loop;
+                musicSource.Play();
+
+                // Fade In
+                for (float t = 0; t < duration / 2; t += Time.deltaTime)
+                {
+                    musicSource.volume = Mathf.Lerp(0, startVolume, t / (duration / 2));
+                    yield return null;
+                }
+                musicSource.volume = startVolume;
+            }
         }
 
         public void StopMusic() => musicSource.Stop();

@@ -13,24 +13,19 @@ namespace MountainRescue.UI
         [SerializeField] private TextMeshProUGUI rankText;
         [SerializeField] private TextMeshProUGUI scoreText;
         [SerializeField] private TextMeshProUGUI timeText;
+        [SerializeField] private TextMeshProUGUI timeToLocateText;
         [SerializeField] private TextMeshProUGUI deathText;
+        [SerializeField] private TextMeshProUGUI safetyViolationsText;
         [SerializeField] private TextMeshProUGUI countdownText;
         [SerializeField] private TextMeshProUGUI victimResultText;
 
         [Header("Text Formats")]
-        [Tooltip("Use {0} for the rank value.")]
-        [SerializeField] private string rankFormat = "{0}";
-
-        [Tooltip("Use {0} for the score value.")]
-        [SerializeField] private string scoreFormat = "{0}";
-
-        [Tooltip("Use {0} for minutes and {1} for seconds.")]
-        [SerializeField] private string timeFormat = "TIME\n{0:00}:{1:00}";
-
-        [Tooltip("Use {0} for the death count.")]
-        [SerializeField] private string deathFormat = "{0}";
-
-        [Tooltip("Use {0} for the remaining seconds.")]
+        [SerializeField] private string rankFormat = "Rank\n{0}";
+        [SerializeField] private string scoreFormat = "Score\n{0}";
+        [SerializeField] private string timeFormat = "Total Time\n{0:00}:{1:00}";
+        [SerializeField] private string timeToLocateFormat = "Locate Time\n{0:00}:{1:00}";
+        [SerializeField] private string deathFormat = "Death\n{0}";
+        [SerializeField] private string safetyViolationsFormat = "Tools Dropped\n{0} times";
         [SerializeField] private string countdownFormat = "Menu in: {0}s";
 
         [Header("Victim Feedback")]
@@ -61,7 +56,18 @@ namespace MountainRescue.UI
                     timeText.text = string.Format(timeFormat, Mathf.Floor(t / 60), Mathf.Floor(t % 60));
                 }
 
+                float locTime = GameSessionManager.Instance.timeToLocate;
+                if (timeToLocateText)
+                {
+                    timeToLocateText.text = string.Format(timeToLocateFormat, Mathf.Floor(locTime / 60), Mathf.Floor(locTime % 60));
+                }
+
                 if (deathText) deathText.text = string.Format(deathFormat, GameSessionManager.Instance.deathCount);
+
+                if (safetyViolationsText)
+                {
+                    safetyViolationsText.text = string.Format(safetyViolationsFormat, GameSessionManager.Instance.safetyViolations);
+                }
 
                 if (victimResultText)
                 {

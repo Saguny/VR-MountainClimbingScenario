@@ -29,6 +29,11 @@ namespace MountainRescue.Dialogue
         void InterruptWithSequence(DialogueSequence sequence);
 
         /// <summary>
+        /// Instantly fast-forwards the current text/audio but waits for physical movement to finish.
+        /// </summary>
+        void SkipCurrentSequence();
+
+        /// <summary>
         /// Event fired when subtitle text changes.
         /// </summary>
         event System.Action<string> OnSubtitleUpdated;

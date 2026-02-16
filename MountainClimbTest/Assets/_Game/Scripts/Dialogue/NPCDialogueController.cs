@@ -64,10 +64,12 @@ namespace MountainRescue.Dialogue
         [SerializeField] private float autoPlayDelay = 0f;
 
         // --- INTERNAL VARIABLES ---
+        public static NPCDialogueController ActiveNPC { get; private set; } 
         private Transform _waypointContainer;
         private Coroutine _activeRoutine;
         private Transform _playerHead;
         private bool _isWalking = false;
+        private bool _skipRequested = false; // Added for skip functionality
 
         // Speed Caching
         private float _cachedMoveSpeed = 0f;
@@ -288,16 +290,28 @@ namespace MountainRescue.Dialogue
             TriggerSequence(initialSequence);
         }
 
+        // ADDED: Skip Functionality
+        public void SkipCurrentSequence()
+        {
+            if (_isPlaying) _skipRequested = true;
+        }
+
         public void TriggerSequence(DialogueSequence sequence)
         {
             if (sequence == null) return;
+            ActiveNPC = this;
             if (_activeRoutine != null) StopCoroutine(_activeRoutine);
+
+            _skipRequested = false; // Reset skip flag for a fresh interaction
+
             _activeRoutine = StartCoroutine(PlaySequenceRoutine(sequence));
         }
 
         public void InterruptWithSequence(DialogueSequence sequence)
         {
             if (sequence == null) return;
+
+            ActiveNPC = this;
 
             // Stop current routine
             if (_activeRoutine != null) StopCoroutine(_activeRoutine);
@@ -312,6 +326,8 @@ namespace MountainRescue.Dialogue
             // Reset state
             _isWalking = false;
             _currentLineIndex = -1;
+
+            _skipRequested = false; // Reset skip flag for a fresh interruption
 
             // Start new sequence
             _activeRoutine = StartCoroutine(PlaySequenceRoutine(sequence));
@@ -371,7 +387,7 @@ namespace MountainRescue.Dialogue
             }
         }
 
-        // --- ORIGINAL METHOD PRESERVED ---
+        // --- UPDATED METHOD: Supports Skipping ---
         private IEnumerator PlaySequenceRoutine(DialogueSequence sequence)
         {
             if (sequence == null) yield break;
@@ -396,6 +412,8 @@ namespace MountainRescue.Dialogue
 
             for (int i = 0; i < sequence.lines.Count; i++)
             {
+                if (_skipRequested) break; // Exit the loop instantly if skipped
+
                 _currentLineIndex = i;
                 var line = sequence.lines[i];
 
@@ -419,11 +437,20 @@ namespace MountainRescue.Dialogue
                         npcAnimator.SetBool(sequence.talkingBool, true);
                 }
 
-                // Wait for dynamic duration (Audio + Extra Delay)
-                yield return new WaitForSeconds(line.GetTotalDuration());
+                // Wait for dynamic duration with skip check
+                yield return StartCoroutine(WaitSkippable(line.GetTotalDuration()));
 
                 SetSubtitleText("", false);
-                yield return new WaitForSeconds(delayBetweenLines);
+
+                // Delay between lines with skip check
+                yield return StartCoroutine(WaitSkippable(delayBetweenLines));
+            }
+
+            // Clean up if a skip occurred
+            if (_skipRequested)
+            {
+                if (speechSource != null) speechSource.Stop();
+                SetSubtitleText("", false);
             }
 
             // Stop speaking loop
@@ -449,16 +476,30 @@ namespace MountainRescue.Dialogue
                 _isPlaying = false;
                 _currentLineIndex = -1;
                 _activeRoutine = null;
+                _skipRequested = false; // Reset flag when the entire chain is fully complete
             }
         }
 
-        // --- ORIGINAL METHOD PRESERVED ---
+        // --- UPDATED METHOD: Supports Skipping ---
         private IEnumerator LineTriggerRoutine(string trigger, int count)
         {
             for (int i = 0; i < count; i++)
             {
+                if (_skipRequested) break; // Halt animation triggers if skipped
                 npcAnimator.SetTrigger(trigger);
-                yield return new WaitForSeconds(0.5f);
+                yield return StartCoroutine(WaitSkippable(0.5f));
+            }
+        }
+
+        // --- ADDED: Custom Skippable Wait Coroutine ---
+        private IEnumerator WaitSkippable(float duration)
+        {
+            float timer = 0f;
+            while (timer < duration)
+            {
+                if (_skipRequested) break;
+                timer += Time.deltaTime;
+                yield return null;
             }
         }
 

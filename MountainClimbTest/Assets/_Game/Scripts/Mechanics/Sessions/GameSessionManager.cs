@@ -19,6 +19,11 @@ namespace MountainRescue.Systems.Session
         public float victimOxygenSupplied = 0f;
         public float victimOxygenRequired = 50f;
 
+        [Header("Extended Sim Data")]
+        public float timeToLocate;
+        public int safetyViolations;
+        private bool hasLocatedVictim;
+
         private bool isTracking = false;
 
         private void Awake()
@@ -53,6 +58,9 @@ namespace MountainRescue.Systems.Session
                 playTime = 0f;
                 deathCount = 0;
                 victimOxygenSupplied = 0f;
+                timeToLocate = 0f;
+                safetyViolations = 0;
+                hasLocatedVictim = false;
                 isTracking = false;
             }
             else if (scene.name == endSceneName || scene.name == "MainMenu")
@@ -78,6 +86,20 @@ namespace MountainRescue.Systems.Session
             }
         }
 
+        public void MarkVictimLocated()
+        {
+            if (isTracking && !hasLocatedVictim)
+            {
+                timeToLocate = playTime;
+                hasLocatedVictim = true;
+            }
+        }
+
+        public void RegisterSafetyViolation()
+        {
+            if (isTracking) safetyViolations++;
+        }
+
         public bool IsVictimSaved()
         {
             return victimOxygenSupplied >= victimOxygenRequired;
@@ -85,17 +107,26 @@ namespace MountainRescue.Systems.Session
 
         public (string rank, int score) GetFinalResults()
         {
+            if (deathCount > 0)
+            {
+                return ("F", 0);
+            }
+
+            if (!IsVictimSaved())
+            {
+                int partialScore = Mathf.Max(0, 5000 - (int)(playTime * 2f));
+                return ("D", partialScore);
+            }
+
+            int baseScore = 12000;
             float timePenalty = playTime * 2f;
-            int deathPenalty = deathCount * 500;
 
-            int rescueBonus = IsVictimSaved() ? 2000 : 0;
-
-            int finalScore = Mathf.Max(0, 10000 + rescueBonus - (int)timePenalty - deathPenalty);
+            int finalScore = Mathf.Max(0, baseScore - (int)timePenalty);
 
             string rank = "C";
-            if (finalScore > 9000) rank = "S";
-            else if (finalScore > 7500) rank = "A";
-            else if (finalScore > 5000) rank = "B";
+            if (finalScore >= 10500) rank = "S";
+            else if (finalScore >= 10000) rank = "A";
+            else if (finalScore >= 8000) rank = "B";
 
             return (rank, finalScore);
         }
