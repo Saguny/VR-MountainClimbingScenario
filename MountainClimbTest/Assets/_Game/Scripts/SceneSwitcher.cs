@@ -36,6 +36,7 @@ namespace MountainRescue.Engine
         [SerializeField] private TextMeshProUGUI subtitleText;
 
         private Coroutine pulseCoroutine;
+        private bool isTransitioning = false;
 
         private void Awake()
         {
@@ -64,7 +65,7 @@ namespace MountainRescue.Engine
             loadingText.gameObject.SetActive(true);
             while (true)
             {
-                float alpha = (Mathf.Sin(Time.time * pulseSpeed) + 1.0f) / 2.0f;
+                float alpha = (Mathf.Sin(Time.unscaledTime * pulseSpeed) + 1.0f) / 2.0f;
                 Color c = loadingText.color;
                 c.a = alpha;
                 loadingText.color = c;
@@ -74,6 +75,8 @@ namespace MountainRescue.Engine
 
         public void SwitchScene(string sceneName, string spawnPointName)
         {
+            if (isTransitioning) return;
+            isTransitioning = true;
             StartCoroutine(LoadSceneRoutine(sceneName, spawnPointName));
         }
 
@@ -82,7 +85,7 @@ namespace MountainRescue.Engine
             float timer = 0f;
             while (timer < duration)
             {
-                timer += Time.deltaTime;
+                timer += Time.unscaledDeltaTime;
                 AudioListener.volume = Mathf.Lerp(startVolume, targetVolume, timer / duration);
                 yield return null;
             }
@@ -91,47 +94,51 @@ namespace MountainRescue.Engine
 
         private IEnumerator LoadSceneRoutine(string sceneName, string spawnPointName)
         {
-
-            // Lock
-            if (GameSessionManager.Instance != null) {
+            if (GameSessionManager.Instance != null)
                 GameSessionManager.Instance.StartSceneTransition();
-            }
-            // 1. FADE OUT
+
             float fadeOutDuration = 1.5f;
             StartCoroutine(FadeGlobalAudio(1f, 0f, fadeOutDuration));
-            if (fader != null) yield return StartCoroutine(fader.FadeOut(fadeOutDuration));
 
-            // 2. SHOW LOADING
+            if (fader != null)
+                yield return StartCoroutine(fader.FadeOut(fadeOutDuration));
+
             if (loadingText != null)
             {
                 if (pulseCoroutine != null) StopCoroutine(pulseCoroutine);
                 pulseCoroutine = StartCoroutine(PulseLoadingText());
             }
 
-            // 3. ASYNC LOAD
+            if (fader != null)
+                fader.StartHoldingBlack();
+
             AsyncOperation op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
             op.allowSceneActivation = false;
             while (op.progress < 0.9f) yield return null;
             op.allowSceneActivation = true;
             while (!op.isDone) yield return null;
 
-            // 4. FIX PHYSICS & REFS
+            if (fader != null)
+                fader.SnapToBlack();
+
             yield return new WaitForEndOfFrame();
 
-            // --- DER FIX ---
-            // Wir zwingen den Fader hier nochmal auf Schwarz, falls die neue Szene 
-            // das Image-Component resettet hat.
-            if (fader != null) fader.SnapToBlack();
+            if (fader != null)
+            {
+                fader.ReattachCameraIfNeeded();
+                fader.SnapToBlack();
+            }
 
             TerrainPhysicsFix();
             yield return new WaitForFixedUpdate();
 
-            // 5. POSITION PLAYER
             GameObject spawnPoint = GameObject.Find(spawnPointName);
             if (spawnPoint == null)
             {
+                fader?.StopHoldingBlack();
                 StopPulse();
                 if (fader != null) yield return StartCoroutine(fader.FadeIn(1.5f));
+                isTransitioning = false;
                 yield break;
             }
 
@@ -140,22 +147,36 @@ namespace MountainRescue.Engine
             xrOrigin.transform.position = spawnPoint.transform.position;
             xrOrigin.transform.rotation = spawnPoint.transform.rotation;
             Physics.SyncTransforms();
-            if (cc != null) { cc.enabled = true; cc.Move(Vector3.zero); }
+
+            if (cc != null)
+            {
+                cc.enabled = true;
+                cc.Move(Vector3.zero);
+            }
 
             if (bodyTransformer != null) bodyTransformer.enabled = true;
             if (dynamicMoveProvider != null) dynamicMoveProvider.enabled = true;
 
-            // 6. HOLD & FADE IN
-            yield return new WaitForSeconds(transitionHoldTime);
+            yield return new WaitForSecondsRealtime(transitionHoldTime);
+
+            fader?.StopHoldingBlack();
             StopPulse();
 
             StartCoroutine(FadeGlobalAudio(0f, 1f, 1.5f));
-            if (fader != null) yield return StartCoroutine(fader.FadeIn(1.5f));
+
+            if (fader != null)
+                yield return StartCoroutine(fader.FadeIn(1.5f));
+
+            isTransitioning = false;
         }
 
         private void StopPulse()
         {
-            if (pulseCoroutine != null) { StopCoroutine(pulseCoroutine); pulseCoroutine = null; }
+            if (pulseCoroutine != null)
+            {
+                StopCoroutine(pulseCoroutine);
+                pulseCoroutine = null;
+            }
             if (loadingText != null)
             {
                 loadingText.gameObject.SetActive(false);
@@ -170,7 +191,11 @@ namespace MountainRescue.Engine
             foreach (Terrain t in Terrain.activeTerrains)
             {
                 TerrainCollider tc = t.GetComponent<TerrainCollider>();
-                if (tc != null) { tc.enabled = false; tc.enabled = true; }
+                if (tc != null)
+                {
+                    tc.enabled = false;
+                    tc.enabled = true;
+                }
             }
         }
     }

@@ -11,23 +11,14 @@ namespace MountainRescue.UI
         [SerializeField] private bool debugMode = true;
 
         private Canvas canvas;
+        private Coroutine holdBlackCoroutine;
 
         private void Awake()
         {
             canvas = GetComponentInParent<Canvas>();
 
-            if (canvas != null)
-            {
-                if (canvas.sortingOrder < 999)
-                {
-                    if (debugMode) Debug.LogWarning($"[HeadsetFader] Canvas sortingOrder was {canvas.sortingOrder}, setting to 9999");
-                    canvas.sortingOrder = 9999;
-                }
-            }
-            else
-            {
-                Debug.LogError("[HeadsetFader] No Canvas found! Fader will not work!");
-            }
+            if (canvas != null && canvas.sortingOrder < 999)
+                canvas.sortingOrder = 9999;
 
             if (fadeImage != null)
             {
@@ -44,106 +35,106 @@ namespace MountainRescue.UI
 
                 if (fadeImage.color.a == 0)
                     fadeImage.color = new Color(0, 0, 0, 0);
-
-                if (debugMode) Debug.Log($"[HeadsetFader] Initialized. Starting color: {fadeImage.color}");
             }
-            else
+        }
+
+        public void ReattachCameraIfNeeded()
+        {
+            if (canvas == null) canvas = GetComponentInParent<Canvas>();
+            if (canvas != null && canvas.renderMode == RenderMode.ScreenSpaceCamera)
             {
-                Debug.LogError("[HeadsetFader] No Fade Image assigned! Assign an Image component in the inspector.");
+                if (canvas.worldCamera == null)
+                    canvas.worldCamera = Camera.main;
             }
         }
 
         public void SnapToBlack()
         {
-            if (fadeImage)
-            {
-                fadeImage.color = Color.black;
-                if (debugMode) Debug.Log("[HeadsetFader] Snapped to BLACK");
-            }
+            if (fadeImage == null) return;
+            fadeImage.color = Color.black;
+            fadeImage.SetAllDirty();
         }
 
         public void SnapToClear()
         {
-            if (fadeImage)
+            if (fadeImage == null) return;
+            fadeImage.color = new Color(0, 0, 0, 0);
+            fadeImage.SetAllDirty();
+        }
+
+        public void StartHoldingBlack()
+        {
+            if (holdBlackCoroutine != null)
+                StopCoroutine(holdBlackCoroutine);
+            holdBlackCoroutine = StartCoroutine(HoldBlackRoutine());
+        }
+
+        public void StopHoldingBlack()
+        {
+            if (holdBlackCoroutine != null)
             {
-                fadeImage.color = new Color(0, 0, 0, 0);
-                if (debugMode) Debug.Log("[HeadsetFader] Snapped to CLEAR");
+                StopCoroutine(holdBlackCoroutine);
+                holdBlackCoroutine = null;
+            }
+        }
+
+        private IEnumerator HoldBlackRoutine()
+        {
+            while (true)
+            {
+                if (fadeImage != null)
+                    fadeImage.color = Color.black;
+                yield return null;
             }
         }
 
         public IEnumerator FadeOut(float duration = -1)
         {
-            if (debugMode) Debug.Log($"[HeadsetFader] Starting FadeOut to BLACK (duration: {duration})");
             yield return FadeToColor(Color.black, duration);
         }
 
         public IEnumerator FadeIn(float duration = -1)
         {
-            float time = duration > 0 ? duration : defaultFadeTime;
-
             if (fadeImage != null)
             {
-                Color startColor = fadeImage.color;
-                Color targetColor = new Color(startColor.r, startColor.g, startColor.b, 0f);
-
-                if (debugMode) Debug.Log($"[HeadsetFader] Starting FadeIn to CLEAR (duration: {time})");
-                yield return FadeToTarget(targetColor, time);
+                Color targetColor = new Color(fadeImage.color.r, fadeImage.color.g, fadeImage.color.b, 0f);
+                yield return FadeToColor(targetColor, duration);
             }
         }
 
         public void SetColor(Color color)
         {
-            if (fadeImage)
-            {
+            if (fadeImage != null)
                 fadeImage.color = color;
-                if (debugMode) Debug.Log($"[HeadsetFader] Set color to {color}");
-            }
         }
 
         public void SnapToColor(Color color)
         {
-            if (fadeImage)
-            {
+            if (fadeImage != null)
                 fadeImage.color = color;
-                if (debugMode) Debug.Log($"[HeadsetFader] Snapped to color {color}");
-            }
         }
 
         public IEnumerator FadeToColor(Color targetColor, float duration = -1)
         {
             float time = duration > 0 ? duration : defaultFadeTime;
-            if (debugMode) Debug.Log($"[HeadsetFader] Starting fade to {targetColor} (duration: {time})");
             yield return FadeToTarget(targetColor, time);
         }
 
         private IEnumerator FadeToTarget(Color targetColor, float duration)
         {
-            if (fadeImage == null)
-            {
-                Debug.LogError("[HeadsetFader] Cannot fade - fadeImage is null!");
-                yield break;
-            }
+            if (fadeImage == null) yield break;
 
             Color startColor = fadeImage.color;
             float timer = 0f;
 
-            if (debugMode) Debug.Log($"[HeadsetFader] Fading from {startColor} to {targetColor} over {duration}s");
-
             while (timer < duration)
             {
-                timer += Time.deltaTime;
-                float t = timer / duration;
-                fadeImage.color = Color.Lerp(startColor, targetColor, t);
-
-                if (debugMode && timer % 0.5f < Time.deltaTime)
-                    Debug.Log($"[HeadsetFader] Progress: {t * 100:F0}% (Color: {fadeImage.color})");
-
+                timer += Time.unscaledDeltaTime;
+                fadeImage.color = Color.Lerp(startColor, targetColor, timer / duration);
                 yield return null;
             }
 
             fadeImage.color = targetColor;
-
-            if (debugMode) Debug.Log($"[HeadsetFader] Fade complete. Final color: {fadeImage.color}");
         }
     }
 }

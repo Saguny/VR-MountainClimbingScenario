@@ -14,6 +14,7 @@ TagManager:
   - SpawnPoint
   - VictimHead
   - Subtitles
+  - SubtitlesDesktop
   layers:
   - Default
   - TransparentFX
@@ -26,7 +27,7 @@ TagManager:
   - Utils
   - Ground
   - Anchor
-  - 
+  - SubtitlesDesktop
   - 
   - 
   - 
@@ -53,6 +54,9 @@ TagManager:
     locked: 0
   - name: UI
     uniqueID: 1771325249
+    locked: 0
+  - name: UI Desktop
+    uniqueID: 2103230055
     locked: 0
   m_RenderingLayers:
   - Default

@@ -897,7 +897,7 @@ GameObject:
   - component: {fileID: 46005977}
   m_Layer: 7
   m_Name: Image
-  m_TagString: Untagged
+  m_TagString: Subtitles
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -942,7 +942,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2339,6 +2339,7 @@ GameObject:
   - component: {fileID: 225044481}
   - component: {fileID: 225044483}
   - component: {fileID: 225044482}
+  - component: {fileID: 225044484}
   m_Layer: 0
   m_Name: SunLight
   m_TagString: Untagged
@@ -2400,7 +2401,7 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 1
-  m_Color: {r: 0.4144186, g: 0.4272093, b: 0.44, a: 1}
+  m_Color: {r: 0.37046102, g: 0.39749464, b: 0.4245283, a: 1}
   m_Intensity: 0.2
   m_Range: 10
   m_SpotAngle: 30
@@ -2410,7 +2411,7 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 0.381
+    m_Strength: 0.146
     m_Bias: 0.05
     m_NormalBias: 0.4
     m_NearPlane: 0.2
@@ -2455,6 +2456,21 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
+--- !u!114 &225044484
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 225044480}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c8bca95f7c947b4db5fb152a0d693d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: com.cqf.urpvolumetricfog.runtime::VolumetricAdditionalLight
+  anisotropy: 0.25
+  scattering: 1
+  radius: 0.2
 --- !u!1001 &236835037
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2638,7 +2654,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Engine.SceneExitTrigger
   targetScene: Scene1
   targetSpawnPointName: SpawnPoint
-  requiredStoryStage: 2
+  requiredStoryStage: 0
 --- !u!65 &245710321
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3146,7 +3162,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DialogueZoneTrigger
   npcController: {fileID: 910850969}
   sequenceToTrigger: {fileID: 11400000, guid: 48c2779a3ec0a3b469ee9bb63bcd283d, type: 2}
-  requiredStoryStage: 0
+  requiredStoryStage: 1
   triggerOnlyOnce: 1
 --- !u!65 &326903644
 BoxCollider:
@@ -11000,7 +11016,7 @@ GameObject:
   - component: {fileID: 1481060278}
   m_Layer: 7
   m_Name: Text (TMP)
-  m_TagString: Untagged
+  m_TagString: Subtitles
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -11922,7 +11938,7 @@ GameObject:
   - component: {fileID: 1573566225}
   m_Layer: 7
   m_Name: Image
-  m_TagString: Untagged
+  m_TagString: Subtitles
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -12183,7 +12199,7 @@ MonoBehaviour:
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
   m_RenderPostProcessing: 1
-  m_Antialiasing: 1
+  m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
   m_Dithering: 0
@@ -12242,9 +12258,9 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
-  far clip plane: 1000
-  field of view: 83
+  near clip plane: 0.01
+  far clip plane: 800
+  field of view: 80
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -16208,6 +16224,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 20855113953941343, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_Depth
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: 20855113953941343, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: far clip plane
+      value: 800
+      objectReference: {fileID: 0}
     - target: {fileID: 394685830030587489, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: orthographic
       value: 0
@@ -16493,6 +16517,10 @@ PrefabInstance:
       value: -1
       objectReference: {fileID: 0}
     - target: {fileID: 4112600337518377572, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_AllowXRRendering
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4112600337518377572, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: m_RenderPostProcessing
       value: 0
       objectReference: {fileID: 0}
@@ -16596,6 +16624,22 @@ PrefabInstance:
       propertyPath: turnInput.m_Reference
       value: 
       objectReference: {fileID: 1336694180}
+    - target: {fileID: 7136020090274359160, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: prewarm
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7136020090274359160, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: cullingMode
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7136020090274359160, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: InitialModule.maxNumParticles
+      value: 1000
+      objectReference: {fileID: 0}
+    - target: {fileID: 7284821231036988096, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7328303845820664355, guid: 93ddbe7460b2d5e4e919c75229d7ffd9, type: 3}
       propertyPath: m_RightHandTurnInput.m_InputActionReference
       value: 
