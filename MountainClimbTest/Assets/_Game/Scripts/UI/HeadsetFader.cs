@@ -8,7 +8,7 @@ namespace MountainRescue.UI
     {
         [SerializeField] private Image fadeImage;
         [SerializeField] private float defaultFadeTime = 1.5f;
-        [SerializeField] private bool debugMode = true; // Enable by default for debugging
+        [SerializeField] private bool debugMode = true;
 
         private Canvas canvas;
 
@@ -16,19 +16,11 @@ namespace MountainRescue.UI
         {
             canvas = GetComponentInParent<Canvas>();
 
-            // CRITICAL: Validate Canvas Setup
             if (canvas != null)
             {
-                if (canvas.renderMode != RenderMode.ScreenSpaceOverlay)
-                {
-                    Debug.LogWarning("[HeadsetFader] Canvas is not in Screen Space - Overlay mode! Fixing...");
-                    canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                }
-
-                // Ensure canvas is on top of everything
                 if (canvas.sortingOrder < 999)
                 {
-                    Debug.LogWarning($"[HeadsetFader] Canvas sortingOrder was {canvas.sortingOrder}, setting to 9999");
+                    if (debugMode) Debug.LogWarning($"[HeadsetFader] Canvas sortingOrder was {canvas.sortingOrder}, setting to 9999");
                     canvas.sortingOrder = 9999;
                 }
             }
@@ -41,7 +33,6 @@ namespace MountainRescue.UI
             {
                 fadeImage.raycastTarget = false;
 
-                // Ensure the image covers the entire screen
                 RectTransform rt = fadeImage.GetComponent<RectTransform>();
                 if (rt != null)
                 {
@@ -51,20 +42,16 @@ namespace MountainRescue.UI
                     rt.anchoredPosition = Vector2.zero;
                 }
 
-                // Start clear if not specified otherwise
                 if (fadeImage.color.a == 0)
                     fadeImage.color = new Color(0, 0, 0, 0);
 
-                if (debugMode)
-                    Debug.Log($"[HeadsetFader] Initialized. Starting color: {fadeImage.color}");
+                if (debugMode) Debug.Log($"[HeadsetFader] Initialized. Starting color: {fadeImage.color}");
             }
             else
             {
                 Debug.LogError("[HeadsetFader] No Fade Image assigned! Assign an Image component in the inspector.");
             }
         }
-
-        // --- STANDARD METHODS (Defaults to Black) ---
 
         public void SnapToBlack()
         {
@@ -86,14 +73,12 @@ namespace MountainRescue.UI
 
         public IEnumerator FadeOut(float duration = -1)
         {
-            // Default "Fade Out" means "Fade to Black"
             if (debugMode) Debug.Log($"[HeadsetFader] Starting FadeOut to BLACK (duration: {duration})");
             yield return FadeToColor(Color.black, duration);
         }
 
         public IEnumerator FadeIn(float duration = -1)
         {
-            // Default "Fade In" means "Fade to Clear" from whatever color we are currently at
             float time = duration > 0 ? duration : defaultFadeTime;
 
             if (fadeImage != null)
@@ -105,8 +90,6 @@ namespace MountainRescue.UI
                 yield return FadeToTarget(targetColor, time);
             }
         }
-
-        // --- COLOR OVERRIDES (For Flashbangs/Damage) ---
 
         public void SetColor(Color color)
         {
@@ -133,8 +116,6 @@ namespace MountainRescue.UI
             yield return FadeToTarget(targetColor, time);
         }
 
-        // --- INTERNAL LOGIC ---
-
         private IEnumerator FadeToTarget(Color targetColor, float duration)
         {
             if (fadeImage == null)
@@ -146,8 +127,7 @@ namespace MountainRescue.UI
             Color startColor = fadeImage.color;
             float timer = 0f;
 
-            if (debugMode)
-                Debug.Log($"[HeadsetFader] Fading from {startColor} to {targetColor} over {duration}s");
+            if (debugMode) Debug.Log($"[HeadsetFader] Fading from {startColor} to {targetColor} over {duration}s");
 
             while (timer < duration)
             {
@@ -163,8 +143,7 @@ namespace MountainRescue.UI
 
             fadeImage.color = targetColor;
 
-            if (debugMode)
-                Debug.Log($"[HeadsetFader] ✓ Fade complete. Final color: {fadeImage.color}");
+            if (debugMode) Debug.Log($"[HeadsetFader] Fade complete. Final color: {fadeImage.color}");
         }
     }
 }

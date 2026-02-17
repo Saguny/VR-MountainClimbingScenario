@@ -477,7 +477,7 @@ MonoBehaviour:
 
     {0:00}:{1:00}'
   deathFormat: Deaths \n{0}
-  safetyViolationsFormat: '{0}'
+  safetyViolationsFormat: Tools Dropped\n{0} Times
   countdownFormat: 'Returning to Main Menu in: \n{0}s'
   victimSuccessMessage: Success! You saved the victim.
   victimFailMessage: Failed! Victim didn't receive enough oxygen.
