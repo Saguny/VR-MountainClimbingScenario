@@ -14,7 +14,6 @@ TagManager:
   - SpawnPoint
   - VictimHead
   - Subtitles
-  - SubtitlesDesktop
   layers:
   - Default
   - TransparentFX

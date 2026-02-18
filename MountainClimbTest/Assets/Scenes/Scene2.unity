@@ -13272,7 +13272,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 84f2c4f47c4e8b049bb0e027f0dc39da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneWeatherConfig
-  sceneMusic: {fileID: 8300000, guid: 36891913709fbc044a0f70395d8a68ae, type: 3}
+  sceneMusic: {fileID: 8300000, guid: 3d78cd00bd1dbf94db80cb425e8a0116, type: 3}
   sceneAmbience: {fileID: 8300000, guid: fcf49d9c2ad0c5446b89c25f603fd27b, type: 3}
   useCrossfade: 1
   seaLevelPressure: 600

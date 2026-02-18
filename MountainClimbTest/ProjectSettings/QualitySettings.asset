@@ -71,7 +71,7 @@ QualitySettings:
     shadowNearPlaneOffset: 3
     shadowCascade2Split: 0.33333334
     shadowCascade4Split: {x: 0.06666667, y: 0.2, z: 0.46666667}
-    shadowmaskMode: 0
+    shadowmaskMode: 1
     skinWeights: 4
     globalTextureMipmapLimit: 0
     textureMipmapLimitSettings: []
@@ -103,12 +103,12 @@ QualitySettings:
     asyncUploadPersistentBuffer: 1
     resolutionScalingFixedDPIFactor: 1
     customRenderPipeline: {fileID: 11400000, guid: 4b83569d67af61e458304325a23e5dfd, type: 2}
-    terrainQualityOverrides: 0
+    terrainQualityOverrides: 18
     terrainPixelError: 1
     terrainDetailDensityScale: 1
-    terrainBasemapDistance: 1000
+    terrainBasemapDistance: 110
     terrainDetailDistance: 80
-    terrainTreeDistance: 5000
+    terrainTreeDistance: 47
     terrainBillboardStart: 50
     terrainFadeLength: 5
     terrainMaxTrees: 50

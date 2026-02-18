@@ -65,13 +65,13 @@ MonoBehaviour:
     m_Value: 1
   tint:
     m_OverrideState: 1
-    m_Value: {r: 0.4764151, g: 0.4764151, b: 0.4764151, a: 1}
+    m_Value: {r: 0.1981132, g: 0.1981132, b: 0.1981132, a: 1}
   enableAdditionalLightsContribution:
     m_OverrideState: 1
     m_Value: 1
   maxSteps:
     m_OverrideState: 1
-    m_Value: 192
+    m_Value: 100
   blurIterations:
     m_OverrideState: 1
     m_Value: 4

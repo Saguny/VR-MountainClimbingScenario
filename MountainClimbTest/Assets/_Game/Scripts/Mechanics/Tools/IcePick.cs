@@ -34,6 +34,15 @@ public class IcePick : LocomotionProvider
     public DynamicMoveProvider moveProvider;
     public BreathManager breathManager;
 
+    [Header("Audio")]
+    public AudioClip stickSound;
+    [Range(0f, 1f)] public float stickVolume = 1f;
+    public Vector2 pitchRange = new Vector2(0.85f, 1.15f);
+    public Vector2 volumeVariation = new Vector2(0.9f, 1f);
+
+    [Header("AudioSource")]
+    public AudioSource audioSource;
+
     private XRGrabInteractable interactable;
     private Rigidbody rb;
     private bool isStuck = false;
@@ -76,10 +85,6 @@ public class IcePick : LocomotionProvider
         if (otherTriggerInput.action != null) otherTriggerInput.action.Disable();
     }
 
-    /// <summary>
-    /// PUBLIC API: Called by ToolRespawner to ensure the tool is clean 
-    /// before being teleported back to the belt.
-    /// </summary>
     public void ForceReset()
     {
         // 1. Logically unstick
@@ -89,7 +94,6 @@ public class IcePick : LocomotionProvider
         }
 
         // 2. Force Physics Reset
-        // FIX: Must set isKinematic to FALSE before modifying velocity to avoid Unity errors
         if (rb != null)
         {
             rb.isKinematic = false;
@@ -117,7 +121,7 @@ public class IcePick : LocomotionProvider
             {
                 if (breathManager == null || breathManager.TryConsumeStaminaForGrab())
                 {
-                    StickToWall();
+                    StickToWall(collision.relativeVelocity.magnitude);
                 }
                 return;
             }
@@ -131,7 +135,7 @@ public class IcePick : LocomotionProvider
         return thisHand && otherHand;
     }
 
-    private void StickToWall()
+    private void StickToWall(float hitVelocity = 1f)
     {
         if (isStuck) return;
         isStuck = true;
@@ -146,6 +150,8 @@ public class IcePick : LocomotionProvider
 
         if (currentInteractor is XRBaseInputInteractor input) input.SendHapticImpulse(0.7f, 0.15f);
 
+        PlayStickSound(hitVelocity);
+
         if (currentInteractor != null && xrOrigin != null)
             previousHandLocalPosition = xrOrigin.transform.InverseTransformPoint(currentInteractor.transform.position);
 
@@ -155,6 +161,19 @@ public class IcePick : LocomotionProvider
         }
 
         UpdatePlayerSystems();
+    }
+
+    
+    private void PlayStickSound(float hitVelocity = 1f)
+    {
+        if (audioSource == null || stickSound == null) return;
+
+        // Map hit velocity to a small extra pitch boost (soft hit = no boost, hard hit = +0.15)
+        float velocityPitchBoost = Mathf.InverseLerp(hitVelocityThreshold, hitVelocityThreshold * 3f, hitVelocity) * 0.15f;
+
+        audioSource.pitch = Random.Range(pitchRange.x, pitchRange.y) + velocityPitchBoost;
+        audioSource.volume = stickVolume * Random.Range(volumeVariation.x, volumeVariation.y);
+        audioSource.PlayOneShot(stickSound);
     }
 
     private void Unstick()
@@ -201,6 +220,11 @@ public class IcePick : LocomotionProvider
         {
             characterController.stepOffset = isClimbing ? 0 : 0.3f;
         }
+
+        if (isClimbing)
+            ClimbingColliderAdjuster.Instance?.AddClimbSource();
+        else
+            ClimbingColliderAdjuster.Instance?.RemoveClimbSource();
     }
 
     private IEnumerator DisableCollidersTemporarily()
