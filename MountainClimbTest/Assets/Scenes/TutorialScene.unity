@@ -935,7 +935,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2654,7 +2654,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MountainRescue.Engine.SceneExitTrigger
   targetScene: Scene1
   targetSpawnPointName: SpawnPoint
-  requiredStoryStage: 0
+  requiredStoryStage: 2
 --- !u!65 &245710321
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3162,7 +3162,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DialogueZoneTrigger
   npcController: {fileID: 910850969}
   sequenceToTrigger: {fileID: 11400000, guid: 48c2779a3ec0a3b469ee9bb63bcd283d, type: 2}
-  requiredStoryStage: 1
+  requiredStoryStage: 0
   triggerOnlyOnce: 1
 --- !u!65 &326903644
 BoxCollider:
@@ -12135,7 +12135,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1617648306}
   - component: {fileID: 1617648310}
-  - component: {fileID: 1617648309}
   - component: {fileID: 1617648308}
   - component: {fileID: 1617648307}
   m_Layer: 0
@@ -12188,7 +12187,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
   m_RenderShadows: 1
-  m_RequiresDepthTextureOption: 2
+  m_RequiresDepthTextureOption: 1
   m_RequiresOpaqueTextureOption: 2
   m_CameraType: 0
   m_Cameras: []
@@ -12219,14 +12218,6 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
---- !u!81 &1617648309
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1617648305}
-  m_Enabled: 1
 --- !u!20 &1617648310
 Camera:
   m_ObjectHideFlags: 0
