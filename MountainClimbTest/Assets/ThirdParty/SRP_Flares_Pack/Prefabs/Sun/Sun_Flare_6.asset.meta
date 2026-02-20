@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 359f0533a86045c43b876eff9c1c2b01
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 209868
+  packageName: SRP Lens Flare Pack (HDRP)
+  packageVersion: 1.0
+  assetPath: Assets/SRP_Flares_Pack/Prefabs/Sun/Sun_Flare_6.asset
+  uploadId: 614176
